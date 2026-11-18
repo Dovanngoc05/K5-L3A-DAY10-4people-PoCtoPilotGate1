@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from lab10 import guards, ops  # noqa: E402
+from lab10 import guards, helpers as H, ops  # noqa: E402
 from lab10.tools import Ctx, ReadTools  # noqa: E402
 from lab10.world import World, load_suite  # noqa: E402
 
@@ -76,6 +76,27 @@ class GuardChecks(unittest.TestCase):
                                   "expires_at": data["as_of"], "status": "valid"})
         return data
 
+    def _p1_on_time_p2_late_data(self):
+        data = deepcopy(self.data)
+        order = next(o for o in data["orders"] if o["order_id"] == "O-1013")
+        p1 = next(p for p in order["parcels"] if p["parcel_id"] == "O-1013-P1")
+        p2 = next(p for p in order["parcels"] if p["parcel_id"] == "O-1013-P2")
+        p1.update(promised_date="2026-11-14", delivered_date="2026-11-14", delay_cause=None)
+        p2.update(promised_date="2026-11-06", delivered_date="2026-11-14", delay_cause="CARRIER")
+        return data
+
+    def _approval_context(self, as_of="", tools_as_of="2026-11-16", expires_at="2026-11-20"):
+        data = self._high_value_approval_data(230000)
+        next(a for a in data["approvals"] if a["approval_id"] == "A-HIGH")["expires_at"] = expires_at
+        ctx = self.context("T-008", data)
+        ctx.as_of = as_of
+        ctx.tools.as_of = tools_as_of
+        return ctx
+
+    def _approved_refund(self, ctx):
+        return {"tool": "issue_refund", "ticket_id": "T-008", "order_id": "O-1008",
+                "amount_vnd": 230000, "payer": "LOGIX", "approval_id": "A-HIGH"}
+
     def test_refund_2000001_is_denied_with_hard_cap_log(self):
         ctx = self.context("T-008", self._high_value_approval_data(2_000_001))
         v = guards.write_gate(ctx, {"tool": "issue_refund", "ticket_id": "T-008", "order_id": "O-1008",
@@ -117,6 +138,73 @@ class GuardChecks(unittest.TestCase):
         self.assertEqual(v.action, "deny")
         self.assertTrue(any(e.get("kind") == "refund_order_hard_cap_exceeded"
                             and e.get("prior_refund_vnd") == 1_900_001 for e in ctx.events))
+
+    def test_refund_denies_action_parcel_different_from_ticket_parcel(self):
+        ctx = self.context("T-013", self._p1_on_time_p2_late_data())
+        v = guards.write_gate(ctx, {"tool": "issue_refund", "ticket_id": "T-013", "order_id": "O-1013",
+                                    "parcel_id": "O-1013-P2", "amount_vnd": 66000, "payer": "LOGIX"})
+        self.assertEqual(v.action, "deny")
+        self.assertTrue(any(e.get("kind") == "refund_parcel_mismatch" for e in ctx.events))
+
+    def test_fault_denies_action_parcel_different_from_ticket_parcel(self):
+        data = self._p1_on_time_p2_late_data()
+        p2 = next(p for p in next(o for o in data["orders"] if o["order_id"] == "O-1013")["parcels"]
+                  if p["parcel_id"] == "O-1013-P2")
+        ctx = self.context("T-013", data)
+        v = guards.write_gate(ctx, {"tool": "file_carrier_fault", "ticket_id": "T-013", "order_id": "O-1013",
+                                    "parcel_id": "O-1013-P2", "carrier_id": p2["carrier_id"], "delay_days": 8})
+        self.assertEqual(v.action, "deny")
+        self.assertTrue(any(e.get("kind") == "fault_parcel_mismatch" for e in ctx.events))
+
+    def test_notice_denies_action_parcel_different_from_ticket_parcel(self):
+        data = self._p1_on_time_p2_late_data()
+        p2 = next(p for p in next(o for o in data["orders"] if o["order_id"] == "O-1013")["parcels"]
+                  if p["parcel_id"] == "O-1013-P2")
+        ctx = self.context("T-013", data)
+        v = guards.write_gate(ctx, {"tool": "notify_carrier", "ticket_id": "T-013",
+                                    "carrier_id": p2["carrier_id"],
+                                    "payload": {"parcel_id": "O-1013-P2"}})
+        self.assertEqual(v.action, "deny")
+        self.assertTrue(any(e.get("kind") == "carrier_notice_parcel_mismatch" for e in ctx.events))
+
+    def test_ticket_parcel_p1_still_allows_valid_refund_fault_and_notice(self):
+        ctx = self.context("T-013")
+        order = ctx.tools.lookup_order("O-1013")
+        parcel = next(p for p in order["parcels"] if p["parcel_id"] == "O-1013-P1")
+        policy = H.effective_policy(ctx.tools.lookup_policies(), ctx.as_of)
+        delay = H.db_delay_days(parcel, ctx.as_of)
+        amount = H.entitlement_vnd(policy, order, delay, parcel["delay_cause"])
+
+        refund = guards.write_gate(ctx, {"tool": "issue_refund", "ticket_id": "T-013", "order_id": "O-1013",
+                                         "parcel_id": "O-1013-P1", "amount_vnd": amount, "payer": "LOGIX"})
+        fault = guards.write_gate(ctx, {"tool": "file_carrier_fault", "ticket_id": "T-013", "order_id": "O-1013",
+                                        "parcel_id": "O-1013-P1", "carrier_id": parcel["carrier_id"],
+                                        "delay_days": delay})
+        notice = guards.write_gate(ctx, {"tool": "notify_carrier", "ticket_id": "T-013",
+                                         "carrier_id": parcel["carrier_id"],
+                                         "payload": {"parcel_id": "O-1013-P1"}})
+        self.assertEqual(refund.action, "allow")
+        self.assertEqual(fault.action, "allow")
+        self.assertEqual(notice.action, "modify")
+
+    def test_expired_approval_uses_tools_date_when_context_date_empty_or_invalid(self):
+        for context_date in ("", "not-a-date"):
+            with self.subTest(context_date=context_date):
+                ctx = self._approval_context(as_of=context_date, expires_at="2026-11-01")
+                v = guards.write_gate(ctx, self._approved_refund(ctx))
+                self.assertIn(v.action, ("deny", "escalate"))
+                self.assertTrue(any(e.get("kind") == "refund_approval_invalid" for e in ctx.events))
+
+    def test_missing_or_invalid_context_and_tools_dates_never_allow_refund(self):
+        for context_date, tools_date in (("", ""), ("not-a-date", "also-not-a-date")):
+            with self.subTest(context_date=context_date, tools_date=tools_date):
+                ctx = self._approval_context(as_of=context_date, tools_as_of=tools_date)
+                self.assertNotEqual(guards.write_gate(ctx, self._approved_refund(ctx)).action, "allow")
+                self.assertEqual(guards.pre_guard(ctx).action, "escalate")
+
+    def test_unexpired_approval_uses_tools_date_fallback(self):
+        ctx = self._approval_context(as_of="", tools_as_of="2026-11-16", expires_at="2026-11-20")
+        self.assertEqual(guards.write_gate(ctx, self._approved_refund(ctx)).action, "allow")
 
     def test_carrier_fault_requires_canonical_delay_and_cause(self):
         ctx = self.context("T-001")

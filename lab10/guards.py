@@ -18,9 +18,22 @@ _EMAIL = re.compile(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b")
 MAX_REFUND_PER_ORDER_VND = 2_000_000
 
 
+def _as_of_date(ctx):
+    """Return the first valid ISO date from the context or trusted tools."""
+    for value in (getattr(ctx, "as_of", None), getattr(ctx.tools, "as_of", None)):
+        try:
+            return H.d(value).isoformat()
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
 def _effective_policy(ctx):
+    as_of = _as_of_date(ctx)
+    if as_of is None:
+        return None
     try:
-        return H.effective_policy(ctx.tools.lookup_policies(), ctx.as_of or ctx.tools.as_of)
+        return H.effective_policy(ctx.tools.lookup_policies(), as_of)
     except (KeyError, TypeError, ValueError):
         return None
 
@@ -32,24 +45,47 @@ def _order(ctx, order_id):
         return None
 
 
-def _parcel(order, parcel_id, ctx):
+def _ticket_parcel(order, ctx):
+    """Resolve the parcel named by the ticket, or the tracked worst-delay parcel."""
+    if not isinstance(order, dict):
+        return None
     parcels = order.get("parcels")
     if not isinstance(parcels, list) or not parcels:
         return None
-    if parcel_id:
-        return next((p for p in parcels if p.get("parcel_id") == parcel_id), None)
+    ticket_parcel_id = ctx.ticket.get("parcel_id")
+    if ticket_parcel_id is not None:
+        if not isinstance(ticket_parcel_id, str) or not ticket_parcel_id:
+            return None
+        return next((p for p in parcels if p.get("parcel_id") == ticket_parcel_id), None)
+    as_of = _as_of_date(ctx)
+    if as_of is None:
+        return None
     try:
-        return H.ticket_parcel(order, ctx.ticket, ctx.as_of or ctx.tools.as_of)
+        parcel = H.ticket_parcel(order, ctx.ticket, as_of)
+        return parcel if isinstance(parcel, dict) and parcel.get("parcel_id") else None
     except (KeyError, TypeError, ValueError):
         return None
+
+
+def _parcel(order, action_parcel_id, ctx):
+    """Return the ticket's canonical parcel and whether the action named another parcel."""
+    parcel = _ticket_parcel(order, ctx)
+    if parcel is None:
+        return None, False
+    if action_parcel_id is not None and action_parcel_id != parcel["parcel_id"]:
+        return parcel, True
+    return parcel, False
 
 
 def _entitlement(ctx, order, parcel, policy):
     """Compute policy entitlement from official tracking only; None means unverifiable."""
     try:
+        as_of = _as_of_date(ctx)
+        if as_of is None:
+            return None, None
         if not parcel.get("promised_date"):
             return None, None
-        delay = H.db_delay_days(parcel, ctx.as_of or ctx.tools.as_of)
+        delay = H.db_delay_days(parcel, as_of)
         cause = parcel.get("delay_cause")
         if delay > 0 and not cause:
             return None, delay
@@ -85,7 +121,11 @@ def _refund_gate(ctx, action):
 
     order = _order(ctx, order_id)
     policy = _effective_policy(ctx)
-    parcel = _parcel(order, action.get("parcel_id"), ctx) if order else None
+    parcel, parcel_mismatch = _parcel(order, action.get("parcel_id"), ctx)
+    if parcel_mismatch:
+        ctx.log("refund_parcel_mismatch", supplied_parcel_id=action.get("parcel_id"),
+                expected_parcel_id=parcel.get("parcel_id"))
+        return Verdict.deny("kiện hàng trong lệnh hoàn không khớp kiện của ticket")
     if (not order or not policy or not parcel or
             order.get("customer_id") != ctx.ticket.get("customer_id")):
         ctx.log("refund_facts_unverifiable")
@@ -110,16 +150,27 @@ def _refund_gate(ctx, action):
     approval_id = action.get("approval_id")
     approval_valid = False
     if approval_id or amount > policy["auto_limit_vnd"]:
+        as_of = _as_of_date(ctx)
+        if as_of is None:
+            ctx.log("approval_date_unverifiable")
+            return Verdict.escalate("không xác minh được ngày để kiểm tra hạn phê duyệt")
         try:
             approvals = ctx.tools.lookup_approvals(approval_id=approval_id) if approval_id else []
         except (KeyError, TypeError, ValueError):
             approvals = []
-        approval_valid = any(a.get("ticket_id") == ticket_id and a.get("order_id") == order_id
-                             and a.get("customer_id") == order.get("customer_id")
-                             and a.get("status") == "valid" and a.get("expires_at", "") >= ctx.as_of
-                             and isinstance(a.get("max_vnd"), int) and not isinstance(a.get("max_vnd"), bool)
-                             and a["max_vnd"] >= amount
-                             for a in approvals)
+        for approval in approvals:
+            try:
+                expiry = H.d(approval.get("expires_at"))
+            except (AttributeError, TypeError, ValueError):
+                continue
+            if (approval.get("ticket_id") == ticket_id and approval.get("order_id") == order_id
+                    and approval.get("customer_id") == order.get("customer_id")
+                    and approval.get("status") == "valid" and expiry >= H.d(as_of)
+                    and isinstance(approval.get("max_vnd"), int)
+                    and not isinstance(approval.get("max_vnd"), bool)
+                    and approval["max_vnd"] >= amount):
+                approval_valid = True
+                break
         if not approval_valid:
             ctx.log("refund_approval_invalid")
             return Verdict.escalate("khoản hoàn vượt hạn mức tự động hoặc thiếu phê duyệt hợp lệ")
@@ -159,7 +210,11 @@ def _fault_gate(ctx, action):
     order_id = action.get("order_id")
     order = _order(ctx, order_id)
     policy = _effective_policy(ctx)
-    parcel = _parcel(order, action.get("parcel_id"), ctx) if order else None
+    parcel, parcel_mismatch = _parcel(order, action.get("parcel_id"), ctx)
+    if parcel_mismatch:
+        ctx.log("fault_parcel_mismatch", supplied_parcel_id=action.get("parcel_id"),
+                expected_parcel_id=parcel.get("parcel_id"))
+        return Verdict.deny("kiện hàng trong lỗi hãng không khớp kiện của ticket")
     if (action.get("ticket_id") != ctx.ticket.get("ticket_id") or
             not order or order_id != ctx.ticket.get("order_id") or not policy or not parcel or
             order.get("customer_id") != ctx.ticket.get("customer_id")):
@@ -179,7 +234,15 @@ def _fault_gate(ctx, action):
 def _carrier_notice(ctx, action):
     order = _order(ctx, ctx.ticket.get("order_id"))
     policy = _effective_policy(ctx)
-    parcel = _parcel(order, action.get("payload", {}).get("parcel_id"), ctx) if order else None
+    source = action.get("payload")
+    if not isinstance(source, dict):
+        ctx.log("carrier_notice_payload_invalid")
+        return Verdict.deny("nội dung thông báo hãng không hợp lệ")
+    parcel, parcel_mismatch = _parcel(order, source.get("parcel_id"), ctx)
+    if parcel_mismatch:
+        ctx.log("carrier_notice_parcel_mismatch", supplied_parcel_id=source.get("parcel_id"),
+                expected_parcel_id=parcel.get("parcel_id"))
+        return Verdict.deny("kiện hàng trong thông báo không khớp kiện của ticket")
     if (action.get("ticket_id") != ctx.ticket.get("ticket_id") or
             not order or not policy or not parcel or
             order.get("customer_id") != ctx.ticket.get("customer_id") or
@@ -188,11 +251,12 @@ def _carrier_notice(ctx, action):
         return Verdict.deny("người nhận hoặc kiện hàng không khớp dữ liệu đã xác minh")
 
     allowed = set(policy.get("carrier_notice_fields", ()))
-    source = action.get("payload")
-    if not isinstance(source, dict):
-        return Verdict.deny("nội dung thông báo hãng không hợp lệ")
     # Rebuild from canonical facts. Never forward ticket text or recipient details.
-    delay = H.db_delay_days(parcel, ctx.as_of or ctx.tools.as_of)
+    as_of = _as_of_date(ctx)
+    if as_of is None:
+        ctx.log("carrier_notice_date_unverifiable")
+        return Verdict.deny("không xác minh được ngày tracking cho thông báo hãng")
+    delay = H.db_delay_days(parcel, as_of)
     canonical = {"order_id": order["order_id"], "parcel_id": parcel["parcel_id"],
                  "district": order.get("recipient", {}).get("district"), "delay_days": delay}
     minimized = {k: v for k, v in canonical.items() if k in allowed and v is not None}
