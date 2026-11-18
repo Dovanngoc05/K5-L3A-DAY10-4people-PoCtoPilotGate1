@@ -5,10 +5,21 @@ Tài liệu làm việc hỗ trợ, không thay ba phiếu chính. Đã có base
 ## Đã chuẩn bị
 
 - Phiếu A, A2 câu 1.3: giữ metric ghi lỗi hãng oan do TV1 đã chọn; TV3 xác nhận và sửa đường dẫn/trường dữ liệu theo evaluator. Bản nháp metric chọn chính sách trước đồng bộ chưa được dùng làm metric chính của nhóm.
-- Phiếu B, B7.3: một tính chất và hai cách diễn đạt của cùng yêu cầu, lệnh PowerShell, kỳ vọng và ô kết quả chưa chạy.
+- Phiếu B, B7.3: đã chạy hai cách diễn đạt cùng yêu cầu sau khi tích hợp cổng TV2; cả hai denied, không ghi sổ/lỗi hãng/thông báo hãng. Có output thật trong `docs/tv3-evidence/`.
 - B0–B2: bổ sung baseline xác nhận `R-base-before-20261118-160903-aca5cb` và hai tác hại cùng trace `T-002@55`. Bằng chứng ở `docs/tv3-evidence/`; chưa triển khai monitor khi chưa biết thẻ.
 
 ## Kết quả và bàn giao hiện tại
+
+### Sau tích hợp LeDoanDuong
+
+- Đã merge origin/LeDoanDuong tại `58e9fa2` vào DoanNhatAnh; không thay code cổng của TV2.
+- `python -X utf8 -m unittest discover -s tests`: 35/35 đạt, gồm kiểm tra hồi quy toàn bộ bộ nền bằng config mặc định và các ca cổng do TV2 bổ sung.
+- Eval `R-base-after-20261118-172000-182fc8`: 65 trial trong phạm vi HN/HCM, coverage 0,5909; pass_rate 1 [1;1], pass_k 1; hoàn sai/lỗi hãng oan/PII đều 0. Chuyển người 0,2308, chi phí 5.165đ/ticket, ROI 0,94, 0 ca ùn, không vượt trần. Gate các ngưỡng đã ký đạt trên report này.
+- Không so trực tiếp 65 trial này với 110 trial baseline như cùng một tập mẫu. Test hồi quy toàn bộ là bằng chứng bổ sung, không thay cho eval toàn phạm vi ở mốc chốt.
+- Hai behavioral test B7.3 đạt trong hai ca đã chạy; T-002@55 ở after cũng bị chặn khoản hoàn sai. Report, gate, trace và journal được sao lưu trong docs/tv3-evidence.
+- Chưa checkpoint: operations.pic/approver/alert vẫn trống, công suất/SLA chưa đặt, legal còn mặc định; cần tích hợp phần TV4 và nhóm chốt. Chưa mở/phân tích S5 hay chạy grade; chưa có prepared hoặc quyết định v1.
+
+### Baseline trước tích hợp
 
 - Gốc nhánh: `23b6213` (PR #1 merge nhánh Dovanngoc); commit ký `d355eb9` đã nằm trong lịch sử origin/main. Nhánh remote Dovanngoc không còn được quảng bá khi fetch.
 - `criteria verify` đạt, hash `ce7ab3b63b40620ff1556a26080e0d0f24712e4ce6d467cea37e02ec71f44c05`; không sửa file tiêu chí hoặc lock.

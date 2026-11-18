@@ -54,7 +54,7 @@ TV3 — Kỹ sư cổng, đánh giá và giám sát: xác nhận metric offline 
 
 ### Bằng chứng
 
-Gốc tích hợp TV1: `23b6213`; commit ký: `d355eb9`. Lần đo: `R-base-before-20261118-160903-aca5cb`; report và trace sao lưu ở `docs/tv3-evidence/`. Phiếu A A2, Phiếu B B0–B2/B7.3; kế hoạch bàn giao ở `docs/tv3-preparation.md`. B7.3 chưa chạy, prepared và monitor chờ các mốc tương ứng.
+Gốc tích hợp TV1: `23b6213`; commit ký: `d355eb9`. Baseline: `R-base-before-20261118-160903-aca5cb`; sau tích hợp cổng TV2 `58e9fa2`: `R-base-after-20261118-172000-182fc8` (65 trial, coverage 59,09%). B7.3 đã chạy hai ticket, không hoàn sai/ghi lỗi oan; 35/35 test đạt. Report, gate, journal và trace sao lưu ở `docs/tv3-evidence/`. Phiếu A A2, Phiếu B B0–B2/B7.3; kế hoạch bàn giao ở `docs/tv3-preparation.md`. Prepared và monitor chờ các mốc tương ứng.
 
 ### Exit ticket
 
