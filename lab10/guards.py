@@ -142,6 +142,31 @@ def _refund_gate(ctx, action):
         ctx.log("refund_without_entitlement")
         return Verdict.deny("tracking và chính sách không xác nhận quyền được hoàn")
 
+    # The order ledger is authoritative across ticket IDs and manual refunds.
+    # refund_status can lag until the nightly reconciliation batch.
+    order_rows = ctx.tools.ledger_rows(order_id=order_id)
+    if any(row.get("ticket_id") == ticket_id for row in order_rows):
+        ctx.log("refund_duplicate_write")
+        return Verdict.deny("phiếu này đã có khoản hoàn trong sổ cái")
+    if any(isinstance(row.get("amount_vnd"), bool)
+           or not isinstance(row.get("amount_vnd"), int)
+           or row["amount_vnd"] < 0 for row in order_rows):
+        ctx.log("refund_ledger_unverifiable")
+        return Verdict.escalate("sổ cái có khoản tiền không hợp lệ; cần kế toán đối soát")
+    already_paid = sum(row["amount_vnd"] for row in order_rows)
+    if already_paid + amount > MAX_REFUND_PER_ORDER_VND:
+        ctx.log("refund_order_hard_cap_exceeded", order_id=order_id,
+                prior_refund_vnd=already_paid, amount_vnd=amount,
+                cap_vnd=MAX_REFUND_PER_ORDER_VND)
+        return Verdict.deny("tổng tiền hoàn cho đơn hàng sẽ vượt hard cap 2.000.000 VND")
+    remaining = max(0, entitled - already_paid)
+    if remaining == 0:
+        ctx.log("refund_entitlement_already_paid", prior_refund_vnd=already_paid,
+                entitled_vnd=entitled)
+        return Verdict.deny("quyền lợi của đơn đã được thanh toán trong sổ cái")
+    requested_amount = amount
+    amount = min(amount, remaining)
+
     payer = action.get("payer")
     if payer != "LOGIX":
         ctx.log("refund_payer_unapproved")
@@ -203,6 +228,10 @@ def _refund_gate(ctx, action):
     if any(r.get("ticket_id") == ticket_id for r in today_rows):
         ctx.log("refund_duplicate_write")
         return Verdict.deny("phiếu này đã có khoản hoàn trong sổ cái")
+    if amount != requested_amount:
+        ctx.log("refund_remaining_entitlement", prior_refund_vnd=already_paid,
+                entitled_vnd=entitled, amount_vnd=amount)
+        return Verdict.modify("chỉ hoàn phần quyền lợi còn lại sau đối soát sổ cái", amount_vnd=amount)
     return Verdict.allow()
 
 
@@ -228,6 +257,10 @@ def _fault_gate(ctx, action):
             action.get("delay_days") != actual_delay):
         ctx.log("fault_evidence_insufficient")
         return Verdict.deny("tracking không đủ căn cứ xác nhận lỗi hãng hoặc tham số không khớp")
+    if ctx.tools.fault_rows(order_id=order_id, parcel_id=parcel["parcel_id"],
+                            carrier_id=parcel["carrier_id"]):
+        ctx.log("fault_duplicate_write")
+        return Verdict.deny("lỗi của hãng trên kiện hàng này đã có trong sổ")
     return Verdict.allow()
 
 

@@ -1,0 +1,60 @@
+﻿  + chép lab10/guards_round1.py -> submission/code/guards_round1.py
+  + chép lab10/guards.py -> submission/code/guards.py
+  + chép lab10/monitors.py -> submission/code/monitors.py
+  + chép config/operating_gates.round1.json -> submission/config/operating_gates.round1.json
+  + chép config/operating_gates.json -> submission/config/operating_gates.json
+  + chép config/switches.json -> submission/config/switches.json
+  + chép config/acceptance_criteria.json -> submission/config/acceptance_criteria.json
+  + chép config/acceptance_criteria.lock -> submission/config/acceptance_criteria.lock
+  + chép config/round1.lock -> submission/config/round1.lock
+  + chép templates/form-a-criteria.md -> submission/docs/form-a-criteria.md
+  + chép templates/form-b-evaluation-gates.md -> submission/docs/form-b-evaluation-gates.md
+  + chép templates/form-c-incident.md -> submission/docs/form-c-incident.md
+  + chép báo cáo tự kiểm tra R-S5-grade-20261118-184018-883400.json và 3 mốc: {'base': 'R-S5-before-20261118-184019-883400', 'prepared': 'R-S5-prepared-20261118-184019-883400', 'after': 'R-S5-after-20261118-184020-883400'}
+  + chép runs/journal.jsonl -> submission/runs/journal.jsonl
+  + ghi submission/manifest.json (20 file)
+
+KIỂM BÀI NỘP (submission/) · đây là kiểm ĐỦ THÀNH PHẦN, không phải chấm điểm
+
+  [ĐỦ  ] submission/submission.json đọc được
+  [ĐỦ  ] tên bàn (`team`): K5-L3A-DAY10-4people-PoCtoPilotGate1
+  [ĐỦ  ] thành viên (`members`): 4 người
+  [ĐỦ  ] số thẻ đã bốc (`incident`): S5
+  [ĐỦ  ] quyết định v1 (`decision_v1`): Cải tiến thêm
+  [ĐỦ  ] quyết định v2 (`decision_v2`): Cải tiến thêm
+  [ĐỦ  ] ba dòng bắt buộc · giả định về môi trường (`three_lines.environment_assumption`)
+  [ĐỦ  ] ba dòng bắt buộc · giảm hay ngăn, vì sao (`three_lines.reduce_or_prevent`)
+  [ĐỦ  ] ba dòng bắt buộc · cần đo lại gì trong pilot thật (`three_lines.measure_in_pilot`)
+  [ĐỦ  ] có file submission/code/guards_round1.py
+  [ĐỦ  ] có file submission/code/guards.py
+  [ĐỦ  ] có file submission/code/monitors.py
+  [ĐỦ  ] có file submission/config/operating_gates.round1.json
+  [ĐỦ  ] có file submission/config/operating_gates.json
+  [ĐỦ  ] có file submission/config/switches.json
+  [ĐỦ  ] có file submission/config/acceptance_criteria.json
+  [ĐỦ  ] có file submission/config/acceptance_criteria.lock
+  [ĐỦ  ] có file submission/config/round1.lock
+  [ĐỦ  ] tiêu chí trong bài nộp khớp hash đã ký (ce7ab3b6)
+  [ĐỦ  ] tiêu chí giữ nguyên từ commit 'Sign acceptance criteria'
+  [ĐỦ  ] cổng vòng 1 trong bài nộp khớp bản đã chốt (300f9086)
+  [ĐỦ  ] config cổng (operating_gates.json) dùng được
+  [ĐỦ  ] cổng con người đã điền: PIC, người duyệt, kênh báo tin, điều kiện dừng
+  [ĐỦ  ] có báo cáo tự kiểm tra (runs/grade-report.json)
+  [ĐỦ  ] báo cáo là của đúng thẻ đã bốc (S5)
+  [ĐỦ  ] mốc base: mã lần chạy R-S5-before-20261118-184019-883400
+  [ĐỦ  ] mốc prepared: mã lần chạy R-S5-prepared-20261118-184019-883400
+  [ĐỦ  ] mốc after: mã lần chạy R-S5-after-20261118-184020-883400
+  [ĐỦ  ] báo cáo được chạy trên đúng code và config hiện tại
+  [ĐỦ  ] báo cáo ghi nhận tiêu chí đã ký, còn nguyên
+  [ĐỦ  ] phiếu docs/form-a-criteria.md đã điền
+  [ĐỦ  ] phiếu docs/form-a-criteria.md: mọi mục đều đã điền
+  [ĐỦ  ] phiếu docs/form-b-evaluation-gates.md đã điền
+  [ĐỦ  ] phiếu docs/form-b-evaluation-gates.md: mọi mục đều đã điền
+  [ĐỦ  ] phiếu docs/form-c-incident.md đã điền
+  [ĐỦ  ] phiếu docs/form-c-incident.md: mọi mục đều đã điền
+  [ĐỦ  ] dòng 'Thẻ đã bốc' trong form-c-incident.md: S5
+  [ĐỦ  ] lần đánh giá đầu tiên (submission/runs/journal.jsonl): 2026-11-18T16:09:03; ký: 2026-11-18T15:48:12; commit ký: 2026-11-18T15:50:48
+  [ĐỦ  ] có submission/manifest.json
+  [ĐỦ  ] manifest khớp các file trong submission/
+
+ĐỦ THÀNH PHẦN. Đẩy lên repo của bàn (tên đúng dạng K5_Day10_3A_<TenNhom> hoặc K5_Day10_3B_<TenNhom>, ví dụ K5_Day10_3A_TenNhom; TenNhom không dấu, không cách) rồi gửi link repo cho team chấm theo cách Lab Coach hướng dẫn.
