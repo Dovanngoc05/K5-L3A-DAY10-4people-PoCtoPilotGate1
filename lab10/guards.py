@@ -160,7 +160,8 @@ def _fault_gate(ctx, action):
     order = _order(ctx, order_id)
     policy = _effective_policy(ctx)
     parcel = _parcel(order, action.get("parcel_id"), ctx) if order else None
-    if (not order or order_id != ctx.ticket.get("order_id") or not policy or not parcel or
+    if (action.get("ticket_id") != ctx.ticket.get("ticket_id") or
+            not order or order_id != ctx.ticket.get("order_id") or not policy or not parcel or
             order.get("customer_id") != ctx.ticket.get("customer_id")):
         ctx.log("fault_facts_unverifiable")
         return Verdict.deny("không đủ dữ liệu tracking để ghi lỗi hãng")
@@ -179,7 +180,8 @@ def _carrier_notice(ctx, action):
     order = _order(ctx, ctx.ticket.get("order_id"))
     policy = _effective_policy(ctx)
     parcel = _parcel(order, action.get("payload", {}).get("parcel_id"), ctx) if order else None
-    if (not order or not policy or not parcel or
+    if (action.get("ticket_id") != ctx.ticket.get("ticket_id") or
+            not order or not policy or not parcel or
             order.get("customer_id") != ctx.ticket.get("customer_id") or
             action.get("carrier_id") != parcel.get("carrier_id")):
         ctx.log("carrier_notice_recipient_invalid")
@@ -203,7 +205,8 @@ def _carrier_notice(ctx, action):
 
 def _customer_reply(ctx, action):
     order = _order(ctx, ctx.ticket.get("order_id"))
-    if (not order or order.get("customer_id") != ctx.ticket.get("customer_id") or
+    if (action.get("ticket_id") != ctx.ticket.get("ticket_id") or
+            not order or order.get("customer_id") != ctx.ticket.get("customer_id") or
             action.get("customer_id") != order.get("customer_id")):
         ctx.log("reply_recipient_invalid")
         return Verdict.deny("người nhận trả lời không khớp chủ đơn")

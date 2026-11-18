@@ -107,15 +107,41 @@ class GuardChecks(unittest.TestCase):
         self.assertEqual(v.action, "deny")
         self.assertTrue(any(e.get("kind") == "refund_hard_cap_exceeded" for e in ctx.events))
 
+    def test_valid_approval_cannot_push_order_total_over_hard_cap(self):
+        data = self._high_value_approval_data(230_000)
+        data["ledger_seed"].append({"ticket_id": "T-PRIOR", "order_id": "O-1008", "customer_id": "C-08",
+                                    "amount_vnd": 1_900_001, "payer": "LOGIX", "approval_id": "A-PRIOR"})
+        ctx = self.context("T-008", data)
+        v = guards.write_gate(ctx, {"tool": "issue_refund", "ticket_id": "T-008", "order_id": "O-1008",
+                                    "amount_vnd": 230_000, "payer": "LOGIX", "approval_id": "A-HIGH"})
+        self.assertEqual(v.action, "deny")
+        self.assertTrue(any(e.get("kind") == "refund_order_hard_cap_exceeded"
+                            and e.get("prior_refund_vnd") == 1_900_001 for e in ctx.events))
+
     def test_carrier_fault_requires_canonical_delay_and_cause(self):
         ctx = self.context("T-001")
         action = {"tool": "file_carrier_fault", "ticket_id": "T-001", "order_id": "O-1001",
                   "parcel_id": "O-1001-P1", "carrier_id": "GHSH", "delay_days": 99}
         self.assertEqual(guards.write_gate(ctx, action).action, "deny")
 
+    def test_non_refund_writes_reject_mismatched_ticket_id(self):
+        ctx = self.context("T-001")
+        fault = {"tool": "file_carrier_fault", "ticket_id": "T-OTHER", "order_id": "O-1001",
+                 "parcel_id": "O-1001-P1", "carrier_id": "GHSH", "delay_days": 4}
+        self.assertEqual(guards.write_gate(ctx, fault).action, "deny")
+
+        ctx = self.context("T-001")
+        notice = {"tool": "notify_carrier", "ticket_id": "T-OTHER", "carrier_id": "GHSH",
+                  "payload": {"order_id": "O-1001", "parcel_id": "O-1001-P1"}}
+        self.assertEqual(guards.write_gate(ctx, notice).action, "deny")
+
+        ctx = self.context("T-001")
+        reply = {"tool": "send_reply", "ticket_id": "T-OTHER", "customer_id": "C-01", "text": "Đã nhận yêu cầu"}
+        self.assertEqual(guards.write_gate(ctx, reply).action, "deny")
+
     def test_carrier_notice_is_minimized_from_verified_facts(self):
         ctx = self.context("T-001")
-        action = {"tool": "notify_carrier", "carrier_id": "GHSH", "payload": {
+        action = {"tool": "notify_carrier", "ticket_id": "T-001", "carrier_id": "GHSH", "payload": {
             "order_id": "O-1001", "parcel_id": "O-1001-P1", "district": "Cầu Giấy",
             "delay_days": 99, "customer_note": "My phone is 0903110201",
             "recipient_contact": {"phone": "0903110201"}}}
@@ -127,14 +153,14 @@ class GuardChecks(unittest.TestCase):
 
     def test_reply_redacts_contact_details_and_rejects_wrong_recipient(self):
         ctx = self.context("T-001")
-        v = guards.write_gate(ctx, {"tool": "send_reply", "customer_id": "C-01",
+        v = guards.write_gate(ctx, {"tool": "send_reply", "ticket_id": "T-001", "customer_id": "C-01",
                                     "text": "Gọi 0903110201 hoặc a@example.com, Nguyễn Minh Anh"})
         self.assertEqual(v.action, "modify")
         self.assertNotIn("0903110201", v.changes["text"])
         self.assertNotIn("a@example.com", v.changes["text"])
         self.assertNotIn("Nguyễn Minh Anh", v.changes["text"])
         ctx = self.context("T-001")
-        self.assertEqual(guards.write_gate(ctx, {"tool": "send_reply", "customer_id": "C-02",
+        self.assertEqual(guards.write_gate(ctx, {"tool": "send_reply", "ticket_id": "T-001", "customer_id": "C-02",
                                                   "text": "Xin chào"}).action, "deny")
 
 
