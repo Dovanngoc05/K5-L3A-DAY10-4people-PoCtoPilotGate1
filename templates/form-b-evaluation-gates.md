@@ -228,6 +228,8 @@ Trạng thái: **Xong** (có bằng chứng) · **Chưa** · **Không áp dụng
 | 8 | Con người, pháp lý | Bên thứ ba (hãng, tài xế, shop, người nhận quà, người đứng tên duyệt); `config/operating_gates.json` mục `legal`; thẻ S6, S7, S8 có mục riêng ở Phiếu C mục C3            | Không gửi dữ liệu cá nhân không cần thiết; ghi lỗi hãng có căn cứ; bên chịu tiền/người duyệt có quyền kiểm soát, có đầu mối nhận phản ánh. | Chưa        | A1 câu 1.2 và A2 câu 1.4 đã có; B4 chỉ rõ người chịu hại. Hiện danh sách chặn PII rỗng, carrier_fault_requires_recorded_cause=false; baseline vẫn có 1 lỗi hãng oan. Kênh phản ánh thật chưa có trong mock. | Nguyễn Hữu Đức (2A202603429) |
 | 9 | Quyết định          | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12)                                                                      | Quyết định khớp ngưỡng đã ký và report đúng mốc; có bằng chứng, PIC và lịch xem lại; chỉ chốt sau checkpoint.                                        | Chưa        | Tiêu chí ký tại commit d355eb9, hash ce7ab3b6; kiểm tra lại hash còn nguyên. B8 ghi chưa thể chốt, chưa có round1.lock hoặc report prepared; chưa được nhận thẻ để quyết định v2.                            | Đỗ Văn Ngọc (2A202603391)    |
 
+**Mốc lịch sử:** bảng B4/B5 phản ánh lúc TV4 khảo sát trước tích hợp; cổng/config đã triển khai được cập nhật tại C11 và báo cáo tổng hợp cuối. Không đọc các từ "hiện tại/chưa" trong bảng lịch sử thành trạng thái cuối bài.
+
 **Cách đọc trạng thái:** Đây là checklist sẵn sàng go-live, không chỉ kiểm đã viết tài liệu. Tại mốc đánh giá này cả chín nhóm còn việc chưa có bằng chứng hoàn tất, nên ghi Chưa; không có nghĩa mọi hạng mục đều chưa bắt đầu. Khi TV2/TV3 hoàn tất cổng và báo cáo, PIC cập nhật bằng chứng trước checkpoint. Các khoảng trống rủi ro cao cần được theo dõi và đưa vào Risk register C10 khi làm Phiếu C; chưa điền phân tích sự cố trước khi nhận thẻ.
 
 Ô "Chưa" có rủi ro cao → chuyển thành một dòng Risk register (Phiếu C mục C10).
@@ -236,38 +238,18 @@ Trạng thái: **Xong** (có bằng chứng) · **Chưa** · **Không áp dụng
 
 <a id="b6"></a>
 
-## B6 · Câu 2.5 · Pre-mortem bốn lăng kính → cổng phòng ngừa (khoảng 8–10 phút, cả bàn)
+## B6 · Câu 2.5 · Pre-mortem bốn lăng kính
 
-*Mọi bàn làm pre-mortem ở vòng 1, TRƯỚC khi biết sự cố, để chọn 2–3 cổng phòng ngừa sẽ dựng. Ở vòng 2 bàn mở lại phần này ở
-Phiếu C mục C1 (bút khác màu).*
+**Tính thời điểm:** B6 chưa có nội dung được lưu trước khi nhóm nhận S5. Bảng dưới là tổng hợp hồi cứu từ code/config vòng 1 và rủi ro đã phân tích, không phải bằng chứng rằng nhóm đã họp và viết pre-mortem trước sự cố. Không đổi timestamp hoặc thêm lịch sử giả.
 
-**Khung tư duy.** Hỏi "có rủi ro gì không" thì ai cũng dè dặt. Nói "nó đã hỏng rồi, vì sao" thì mọi người được phép nói ra
-điều mình vẫn lo. Làm im lặng trước, đọc sau, để ý kiến của người nói to không lấn át.
+| Lý do thất bại (thì quá khứ, kịch bản giả định) | Lăng kính | Kiểm được bằng gì | Cổng vòng 1 tương ứng / rủi ro còn lại |
+|---|---|---|---|
+| Trợ lý đã tin lời khách thay tracking hoặc chọn sai policy, làm trả sai tiền. | Kỹ thuật | T-002@55; tracking/model_override; khoảng hiệu lực policy. | Chọn để dựng cổng: pin policy và kiểm quyền lợi tại _refund_gate, snapshot 300f9086. |
+| Đội đã trả cả tiền AI lẫn công người, khiến pilot lỗ ở một số kho. | Kinh doanh | ops_facts giá làm tay 10.000đ; report chi phí/ROI; business.pilot_scope. | Chọn để dựng cổng: ngân sách 1.500đ và phạm vi HN/HCM. Trước S5 chưa có monitor chi phí kho. |
+| Người duyệt đã quá tải hoặc không biết ai bấm dừng khi báo động đỏ. | Con người và vận hành | 1 người/6 ca giờ, SLA 60 phút; operations và runbook B7.5/B7.6. | PIC NV-TUNG, NV-HANH duyệt; gọi dự phòng khi 3 ca/30 phút; rủi ro diễn tập thật chuyển C10. |
+| Hãng/tài xế đã nhận lỗi oan hoặc nhận PII không cần thiết. | Pháp lý | B4; payload notify_carrier; lỗi hãng của T-002@55. | Chọn để dựng cổng: xác minh đúng kiện/hãng/nguyên nhân và dựng lại payload tối thiểu. |
 
-**Đề bài (đọc to):** *"Ba tháng sau pilot, LogiX phải tắt trợ lý hoàn tiền ở cả hai depot. Chuyện gì đã xảy ra?"*
-
-1. **2 phút, im lặng:** mỗi người viết 2 lý do, mỗi lý do một dòng.
-2. **2 phút:** đọc vòng tròn, mỗi lượt một lý do, không bình luận. Gộp lý do trùng.
-3. **2 phút:** xếp từng lý do vào một **lăng kính**. Lăng kính nào còn trống thì cả bàn viết thêm ít nhất một lý do cho nó.
-4. **2 phút:** chọn 2–3 lý do sẽ biến thành **cổng phòng ngừa** ngay hôm nay (code trong `guards.py` hoặc con số trong
-   `config/operating_gates.json`). Lý do còn lại → Risk register.
-
-Bốn lăng kính (bắt buộc đủ cả bốn; dự án AI hay chết ở ba lăng kính sau hơn là ở lăng kính đầu):
-
-| Lăng kính                          | Câu hỏi gợi ý trên LogiX                                                                                                  |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| **Kỹ thuật**                 | Model tin nhầm cái gì? Dữ liệu nào thiếu, cũ, lệch? Lệnh ghi nào không đảo ngược được?                      |
-| **Kinh doanh**                 | Mỗi ticket tốn bao nhiêu so với làm tay? Một ngày hoàn tối đa bao nhiêu? Nhóm ticket nào không thể có lời?    |
-| **Con người và vận hành** | Ai duyệt, mấy người, mỗi giờ được mấy ca? Lượng việc tăng gấp ba thì sao? Nhân viên có tin trợ lý không? |
-| **Pháp lý**                  | Dữ liệu cá nhân của ai rời hệ thống? Bên thứ ba nào bị ghi lỗi, bị trừ tiền mà không được hỏi?           |
-
-| Lý do thất bại (viết ở thì quá khứ) | Lăng kính                | Kiểm được hôm nay? (trace / data / config nào) | Thành cổng phòng ngừa nào (code hay config) / hay vào risk register |
-| ------------------------------------------- | -------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------- |
-|                                             | Kỹ thuật                 |                                                      |                                                                           |
-|                                             | Kinh doanh                 |                                                      |                                                                           |
-|                                             | Con người và vận hành |                                                      |                                                                           |
-|                                             | Pháp lý                  |                                                      |                                                                           |
-|                                             |                            |                                                      |                                                                           |
+Hoàn trùng liên ticket và hoàn tay là nhánh bị bỏ sót: chỉ được bổ sung sau khi đọc S5 tại C1/C3.5/C6, không nhận là đã phòng ngừa ở vòng 1.
 
 ---
 
@@ -275,29 +257,20 @@ Bốn lăng kính (bắt buộc đủ cả bốn; dự án AI hay chết ở ba 
 
 ## B7 · Khối 2B · Cổng phòng ngừa (phút 85–105)
 
-### B7.1 · Câu 2.6 · 2–3 cổng phòng ngừa trong `lab10/guards.py`
+### B7.1 · Câu 2.6 · Cổng phòng ngừa trong guards.py
 
-Mỗi cổng ứng với một dòng pre-mortem (B6) hoặc một dòng HAZOP (B4). Viết trong `pre_guard(ctx)` (trước khi trợ lý đọc ticket)
-hoặc `write_gate(ctx, action)` (trước mỗi lệnh ghi). Thử bằng:
+| # | Cổng trong bản vòng 1 | Liên hệ rủi ro B4/B6 | Nguồn thật và điều kiện | Report trước chốt | Ca đang đúng bị hỏng |
+|---|---|---|---|---|---|
+| 1 | pre_guard pin policy, _refund_gate kiểm quyền lợi, chủ đơn, approval và cap | Sai số ngày/policy/quyền chi tiền | orders/parcels, policies, approvals, ops_limits; không tin số khách khai | R-base-after-20261118-172347-6b6da8 | Không; test hồi quy toàn bộ nền đạt. |
+| 2 | _fault_gate kiểm đúng kiện/hãng, độ trễ và nguyên nhân | Quy lỗi oan cho hãng/tài xế | tracking của kiện, fault_causes của policy hiệu lực | cùng report | Không |
+| 3 | _carrier_notice dựng lại payload, _customer_reply kiểm người nhận và ẩn PII | Gửi dữ liệu dư/nhầm bên nhận | carrier_notice_fields, order/customer trong DB | cùng report | Không |
 
-```bash
-python3 -m lab10.eval --suite base --stage after --note "cổng vòng 1: ..."
-python3 -m unittest discover -s tests
-```
+Đây là mô tả snapshot vòng 1, không gán phần đối soát số dư theo order và chống fault lặp của vòng 2 cho vòng 1. B6 là bản tổng hợp hồi cứu như ghi chú ở trên.
 
-| # | Cổng (hàm và nhánh, ví dụ `write_gate` khi `tool == "issue_refund"`) | Ứng với dòng nào ở B6 / B4 | Chặn điều gì, dựa vào nguồn sự thật nào | Mã lần chạy `base · after` | Ca đang đúng nào bị hỏng? (phải là "không") |
-| - | ------------------------------------------------------------------------------ | ------------------------------- | ------------------------------------------------- | -------------------------------- | ---------------------------------------------------- |
-| 1 |                                                                                |                                 |                                                   |                                  |                                                      |
-| 2 |                                                                                |                                 |                                                   |                                  |                                                      |
-| 3 |                                                                                |                                 |                                                   |                                  |                                                      |
+### B7.2 · Câu 2.7 · Hai bước tránh rò rỉ dữ liệu đánh giá
 
-### B7.2 · Câu 2.7 · Hai bước tránh rò rỉ dữ liệu
-
-Bàn đang chỉnh cổng tới khi 22 ticket bộ nền xanh hết. Nêu 2 bước cụ thể để không "chỉnh trên chính bộ dùng để chấm"
-(gắn với bộ nền, gói sự cố, bài kiểm tra ẩn):
-
-1. …
-2. …
+1. Dùng base làm bộ phát triển, thêm hai ticket tự soạn B7.3 và kiểm tra tính chất tổng quát; không xử lý riêng ticket_id hoặc câu chữ. Báo cả mẫu số, độ phủ và các ca ngoài phạm vi.
+2. Giữ snapshot vòng 1 cố định, chạy S5 trước sửa rồi mới dùng S5 cho vòng sửa sự cố; không gọi kết quả trên S5 sau chỉnh là đánh giá độc lập. Không đọc/huấn luyện theo test ẩn; team chấm chạy test ẩn sau. Các gói khác chỉ được bổ sung để khớp manifest theo yêu cầu đóng gói, không dùng phân tích hay điều chỉnh cổng.
 
 ### B7.3 · Câu 2.8 · Một behavioral test
 
@@ -419,48 +392,27 @@ Lượng ticket có thể dồn gấp ba trong một giờ (ngày sale, sau bão
 
 <a id="b8"></a>
 
-## B8 · Chốt cổng vòng 1 và quyết định Gate 1 · v1 (phút 105–115)
+## B8 · Chốt cổng vòng 1 và quyết định Gate 1 v1
 
-**Trạng thái hiện tại: CHƯA THỂ CHỐT.** Tiêu chí đã ký (hash `ce7ab3b6`, commit `d355eb9`) và đã có report base `R-base-before-20261118-155215-aca5cb`; report cho thấy hai ngưỡng an toàn chưa đạt. Chưa có `config/round1.lock` hoặc report `prepared`, nên chưa thể điền hash checkpoint, đánh giá đủ ba bằng chứng hay chốt quyết định v1. Hoàn tất cổng vòng 1, chạy checkpoint và eval `prepared` rồi cả bàn mới chốt.
+**Nguồn và thời điểm:** snapshot thực tế được chốt 2026-11-18T17:24:42, sau khi tải gói S5 nhưng trước khi mở/phân tích nội dung. Không có quyết định v1 được nhóm ký và lưu trước khi nhận thẻ. Cột dưới là **đề xuất hồi cứu dựa riêng bằng chứng base/prepared**, cần trưởng nhóm xác nhận khi nộp; không trình bày là quyết định đã có ở phút 115.
 
-Làm đúng thứ tự:
+| Mục | v1 — đề xuất hồ sơ |
+|---|---|
+| Commit ký tiêu chí | d355eb9, hash ce7ab3b6 |
+| Hash chốt cổng vòng 1 | 300f9086; timestamp thực tế 2026-11-18T17:24:42, không sửa lock |
+| Mã lần chạy | base R-base-before-20261118-160903-aca5cb; prepared R-base-prepared-20261118-172442-6b6da8 |
+| Còn vượt trần không? | Không trên base prepared HN/HCM; chưa có bằng chứng về sự cố và năng lực vận hành thật tại mốc này. |
+| Kho/hãng xấu nhất | Phân khúc kho chưa xác định `?` có 10.359đ/ticket, 5 trial; HCM có chi phí cao nhất trong kho có mã: 3.447đ. Cần xác minh phân luồng ca không tìm thấy đơn, không che trong trung bình. |
+| Quyết định | **Cải tiến thêm** — chưa mở pilot thật chỉ dựa benchmark. |
+| Bằng chứng 1 | Prepared 65/65 trial, pass_rate=pass_k=1, coverage 59,09%, không hoàn sai/lỗi oan/PII. |
+| Bằng chứng 2 | Prepared 5.550đ/ticket, ROI 0,80, 0 ca ùn, chờ tối đa 0 phút; một người/6 ca giờ. |
+| Bằng chứng 3 | Kênh cảnh báo là mô phỏng; SLA dừng 5 phút và dữ liệu production chưa diễn tập. Test nền không chứng minh mọi nguồn ghi tiền và concurrency. |
+| decision_rule | Áp tinh thần Cải tiến thêm: còn thiếu bằng chứng an toàn/vận hành để xác nhận các ngưỡng trên môi trường thật; chưa mở pilot, có giả thuyết sửa/kiểm chứng và người phụ trách. Không nói một ngưỡng số mock đã thất bại khi report đang đạt. |
+| Nếu Thu hẹp | Không chọn ở v1; phạm vi cấu hình đã là HN/HCM, ngoài phạm vi đi theo quy trình thủ công. |
+| Nếu Cải tiến thêm | Dương kiểm tính nhất quán nguồn ghi và ca ngoài benchmark; Đức diễn tập cảnh báo/dừng; Nhật Anh đo lại; Ngọc xác nhận điều kiện mở. |
+| Nếu Dừng | Không chọn; chưa có bằng chứng không thể khắc phục. |
+| Bằng chứng còn thiếu | Bộ sự cố/test độc lập, dữ liệu tải và chi phí thật, kênh cảnh báo thực, tính nguyên tử nơi ghi tiền. |
+| Ngày quyết định lại | Đề xuất 19/11/2026 17:00 GMT+7, hoặc sau khi đủ bằng chứng; đây không phải lịch đã được tổ chức phê duyệt. |
+| PIC ký | Đỗ Văn Ngọc — PIC theo phân công; tên này không thay chữ ký/xác nhận của trưởng nhóm. |
 
-```bash
-python3 -m lab10.checkpoint
-python3 -m lab10.eval --suite base --stage prepared
-python3 -m lab10.gate --run runs/<mã lần chạy>/report.json
-```
-
-**Khung tư duy.** Gate 1 "đạt" khi **quyết định khớp bằng chứng và khớp tiêu chí đã ký trước**. Tiếp tục, Thu hẹp, Cải tiến
-thêm, Dừng đều có thể là quyết định đạt. Quyết định không đạt là quyết định mà con số trong report không đỡ được.
-Chỉ chọn Tiếp tục khi mọi chỉ số bắt buộc đều đạt.
-
-Ba câu tự vấn trước khi viết: (1) Rủi ro còn lại có chấp nhận được như hiện trạng không? (2) Cần thêm biện pháp nào, tốn
-bao nhiêu thời gian? (3) Có phần nào của dự án không nên làm tiếp?
-
-|                                                                                                                                                                                                                                                       | **v1** (phút 105–115, TRƯỚC khi nhận thẻ sự cố)                                                                  |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Commit ký tiêu chí (message `Sign acceptance criteria`; hash commit, tuỳ chọn)                                                                                                                                                                 | `d355eb9`                                                                                                                    |
-| Hash chốt cổng vòng 1 (8 ký tự lệnh `lab10.checkpoint` in ra, tuỳ chọn)                                                                                                                                                                     | `300f9086` (taken_at thực tế 2026-11-18T17:24:42; sau nhận gói, trước mở nội dung S5). |
-| Mã lần chạy dùng làm bằng chứng                                                                                                                                                                                                                | base: `R-base-before-20261118-160903-aca5cb`; prepared: `R-base-prepared-20261118-172442-6b6da8`. |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý)                                                                                                                                                      |                                                                                                                                |
-| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Đọc khối "theo kho và hãng" ở cuối output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* |                                                                                                                                |
-| Quyết định (khoanh một)                                                                                                                                                                                                                           | Tiếp tục · Thu hẹp · Cải tiến thêm · Dừng                                                                            |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa                                                                                                                                                                               |                                                                                                                                |
-| Bằng chứng 2                                                                                                                                                                                                                                        |                                                                                                                                |
-| Bằng chứng 3                                                                                                                                                                                                                                        |                                                                                                                                |
-| Khớp dòng nào trong `decision_rule` đã ký?                                                                                                                                                                                                    |                                                                                                                                |
-| Nếu Thu hẹp: cắt phần nào, vì sao                                                                                                                                                                                                               |                                                                                                                                |
-| Nếu Cải tiến thêm: giả thuyết cụ thể + hạn                                                                                                                                                                                                   |                                                                                                                                |
-| Nếu Dừng: bài học ghi lại                                                                                                                                                                                                                        |                                                                                                                                |
-| Một bằng chứng còn thiếu (thứ bộ nền chưa đo được)                                                                                                                                                                                       |                                                                                                                                |
-| Ngày quyết định lại (trừ khi Dừng)                                                                                                                                                                                                             |                                                                                                                                |
-| PIC ký                                                                                                                                                                                                                                               |                                                                                                                                |
-
-Xong v1 thì lưu và đẩy một bản (sau mốc này không sửa cột v1):
-
-```bash
-git add lab10/guards.py lab10/guards_round1.py config/operating_gates.json config/operating_gates.round1.json config/round1.lock templates/form-b-evaluation-gates.md
-git commit -m "LAB 10: chốt cổng vòng 1, quyết định v1"
-git push -u origin main
-```
+Không chỉnh B8 để đưa kết quả after S5 vào làm bằng chứng trước sự cố.

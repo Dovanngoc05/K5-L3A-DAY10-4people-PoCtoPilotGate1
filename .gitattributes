@@ -7,6 +7,7 @@
 /lab10/monitors.py -text
 /config/operating_gates.json -text
 /config/switches.json -text
+/submission/** -text
 /data/tickets.jsonl text eol=lf
 /data/world.json text eol=lf
 /incidents/S5/card.json text eol=lf
@@ -30,3 +31,31 @@
 /lab10/trace.py text eol=lf
 /lab10/world.py text eol=lf
 /tests/test_public.py text eol=lf
+/incidents/S1/card.json text eol=lf
+/incidents/S1/card.md text eol=lf
+/incidents/S1/tickets.jsonl text eol=lf
+/incidents/S1/world_patch.json text eol=lf
+/incidents/S2/card.json text eol=lf
+/incidents/S2/card.md text eol=lf
+/incidents/S2/tickets.jsonl text eol=lf
+/incidents/S2/world_patch.json text eol=lf
+/incidents/S3/card.json text eol=lf
+/incidents/S3/card.md text eol=lf
+/incidents/S3/tickets.jsonl text eol=lf
+/incidents/S3/world_patch.json text eol=lf
+/incidents/S4/card.json text eol=lf
+/incidents/S4/card.md text eol=lf
+/incidents/S4/tickets.jsonl text eol=lf
+/incidents/S4/world_patch.json text eol=lf
+/incidents/S6/card.json text eol=lf
+/incidents/S6/card.md text eol=lf
+/incidents/S6/tickets.jsonl text eol=lf
+/incidents/S6/world_patch.json text eol=lf
+/incidents/S7/card.json text eol=lf
+/incidents/S7/card.md text eol=lf
+/incidents/S7/tickets.jsonl text eol=lf
+/incidents/S7/world_patch.json text eol=lf
+/incidents/S8/card.json text eol=lf
+/incidents/S8/card.md text eol=lf
+/incidents/S8/tickets.jsonl text eol=lf
+/incidents/S8/world_patch.json text eol=lf

@@ -34,6 +34,7 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 | 2 | `R-S5-after-20261118-172739-a2b82f` | S5 · after | Chỉ thêm hai monitor TV3; giữ nguyên cổng và config. | 0,7000 [0,4000; 1,0000] | 0,7000 | 350.000đ · 15 · 0 | 0,3000 | Monitor phát hiện tín hiệu; chưa sửa tác hại nghiệp vụ. |
 | 3 | `R-S5-after-20261118-173309-883400` | S5 · after | Sửa đối soát quyền lợi còn lại theo ledger của order và chống ghi lỗi hãng lặp; giữ nguyên config. | 1,0000 [1,0000; 1,0000] | 1,0000 | 0đ · 0 · 0 | 0,3000 | ROI +0,52, chi phí 6.564đ/ticket, coverage vẫn 33,33%; integrity còn thiếu gói khác. |
 | 4 | `R-base-after-20261118-172739-a2b82f` | base · after | Kiểm hồi quy sau thêm monitor. | 1,0000 [1,0000; 1,0000] | 1,0000 | 0đ · 0 · 0 | 0,2308 | 65 trial, coverage 59,09%; 35 test đạt. |
+| 5 | `R-S5-after-20261118-184020-883400` | S5 · after | Chỉ bổ sung file nguồn còn thiếu để kiểm integrity; code/config giữ hash 8834008c262f. | 1,0000 [1,0000; 1,0000] | 1,0000 | 0đ · 0 · 0 | 0,3000 | PASS-VISIBLE; integrity đạt, ROI +0,52, coverage 33,33%; 40 test đạt. |
 
 ---
 
@@ -51,15 +52,19 @@ python3 -m lab10.grade --incident Sx
 - Cổng vòng 1 hạn chế LLM ticket đắt nhất từ 2.412đ xuống 768đ; hoàn sai từ 890.000đ xuống 350.000đ và lỗi hãng oan từ 20 xuống 15. Phạm vi thay từ toàn bộ sang HN/HCM (coverage 33,33%), nên mức giảm tổng không được quy hoàn toàn cho hiệu quả cổng; HCM-B2B không được xử lý ở prepared. PII và ca ùn đều 0 ở cả hai mốc.
 - Khối kinh doanh/vận hành còn ROI -0,55 < 0; ngoài ra chưa đạt pass_rate 0,91, pass_k 0,85, hoàn sai 0 và lỗi hãng oan 0. Grade đầu có lỗi integrity do CRLF và thiếu gói khác; sau phục hồi byte LF khớp manifest, chỉ còn thiếu 28 file thuộc 7 thẻ khác. Không sửa grader/manifest để bỏ qua.
 
+Cập nhật đóng gói: grade `R-S5-grade-20261118-184018-883400` đã xác nhận integrity đạt sau khi người dùng yêu cầu lấy đủ file nguồn. Các con số ở phần trên vẫn là kết quả lần đo đầu, không bị thay bằng số sau sửa.
+
 **Mở lại pre-mortem (Phiếu B mục B6), viết bằng bút khác màu.** Với thẻ S1, S3, S4, S5 đây là một phần của phần riêng theo thẻ.
 
 - Sự cố thuộc kinh doanh (tiền máy + công duyệt + tiền mất), kỹ thuật (hoàn trùng), con người/vận hành (CSKH hoàn tay nhưng cờ đơn chưa cập nhật), pháp lý/trách nhiệm đối với hãng khi bị ghi lỗi oan.
-- B6 vòng 1 hiện vẫn trống các dòng lý do; không đủ bằng chứng nói nhóm đã dự đoán S5. Cần nhóm bổ sung diễn giải trung thực, không điền ngược vào B6 như đã làm trước khi biết thẻ. Trần chi phí và phạm vi đã có trong config là bằng chứng chuẩn bị, không thay thế pre-mortem bằng văn bản.
+- B6 không có bản hoàn chỉnh được lưu trước S5; bản hiện tại được đánh dấu tổng hợp hồi cứu; không đủ bằng chứng nói nhóm đã dự đoán S5. Cần nhóm bổ sung diễn giải trung thực, không điền ngược vào B6 như đã làm trước khi biết thẻ. Trần chi phí và phạm vi đã có trong config là bằng chứng chuẩn bị, không thay thế pre-mortem bằng văn bản.
 - Lý do còn thiếu, thêm bây giờ:
 
 | Lý do thất bại (viết ở thì quá khứ) | Lăng kính | Kiểm được bằng gì (trace / data / config nào) |
 |---|---|---|
-| | | |
+| Một đơn đã được trả quyền lợi nhiều lần qua ticket mới hoặc hoàn tay chưa cập nhật cờ đơn. | Kỹ thuật và vận hành | S5-02/S5-20@11, ledger_seed và số dư quyền lợi theo order. |
+| Kho sỉ đã tốn cả AI lẫn công người nên không có business case như nhóm dự kiến. | Kinh doanh | S5-51@11, HCM-B2B base 11.326đ/ticket; phạm vi prepared không gồm kho này. |
+| Dữ liệu đến dài hơn bộ thử ban đầu nên đội đã đánh giá thấp ngân sách đọc và công chuyển người. | Kinh doanh và vận hành | S5-70@11; business_gate và cost_budget_handoff_rate. |
 
 ---
 
@@ -125,103 +130,30 @@ Yêu cầu: ít nhất **hai lỗi có nguồn khác nhau** ở phần 2, và í
 
 ### C3.1 · Mức kiểm soát của con người ở từng lệnh ghi (S2; S8 chỉ một dòng)
 
-**Cách làm:** (1) soát các dấu hiệu cho thấy con người **cần giữ nhiều quyền kiểm soát hơn**; (2) lập bảng
-*ai · ở việc nào · cần mức kiểm soát nào* (thấp / vừa / cao / chưa rõ), thêm một cột: **hệ thống hiện đang cho mức nào**.
-Chỗ hai cột lệch nhau chính là nơi đặt gate.
-
-**Bước 1 · Dấu hiệu cần nhiều quyền kiểm soát hơn (đánh dấu, ghi bằng chứng từ thẻ)**
-
-| Dấu hiệu | Có? | Bằng chứng trong thẻ / data |
-|---|---|---|
-| Việc này đụng tới lĩnh vực nhạy cảm: tiền, quan hệ kinh doanh với đối tác | | |
-| Hệ trọng cao và cách làm bằng AI còn mới với người liên quan: họ muốn nắm quyền lúc đầu để xây lòng tin | | |
-| Hệ thống còn lâu mới đạt độ chính xác mong muốn; quyền của con người là biện pháp tạm trong lúc chờ | | |
-| Giới hạn hoặc lỗi của hệ thống cần con người sửa lại | | |
-| Hoàn cảnh thay đổi khiến con người phải "đặt lại" hoặc "tiếp quản" (phê duyệt hết hạn, bị thu hồi; chính sách đổi) | | |
-
-**Bước 2 · Bảng mức kiểm soát**
-
-| Ai (vai, tên trong `staff` nếu có) | Việc / lệnh ghi | Mức kiểm soát họ **cần** (thấp / vừa / cao / chưa rõ) | Mức hệ thống **đang cho** (xem trace) | Lệch? |
-|---|---|---|---|---|
-| | `issue_refund` dưới hạn mức tự động | | | |
-| | `issue_refund` trên hạn mức tự động (S8 chỉ điền dòng này) | | | |
-| | `issue_refund` mà người trả là shop | | | |
-| | nhiều khoản hoàn tự động cho một khách trong ngày | | | |
-| | | | | |
-
-→ Mỗi dòng "Lệch" là một nhánh của fault tree và một ứng viên cho gate. Ghi rõ gate **trả quyền về cho ai** (chuyển người
-duyệt, chờ duyệt, trần).
-
-**Ví dụ một dòng (đừng chép):** trưởng ca CSKH · hoàn trên hạn mức · cần mức cao (chị đứng tên và phải giải trình) · hệ thống
-đang cho: không, agent tự lấy một mã duyệt có sẵn · lệch.
+Không áp dụng cho thẻ S5; nhóm không phân tích thẻ khác. Phần riêng cần trả lời của S5 nằm ở C3.5 và C1.
 
 ### C3.2 · Hình dung của người và hình dung của hệ thống (S6)
 
-**Cách làm:** thảo luận theo nhóm rồi ghi cho **từng nhóm người dùng**: họ là ai, mục tiêu chính là gì, và hiện
-nay họ làm việc này **từng bước ra sao**, đồng đều hay mỗi nơi một kiểu. Dòng cuối: **hệ thống đang mang hình dung nào**, đọc từ trace.
-
-| | Nhóm A: `__________` (gợi ý: điều phối / tài xế của hãng) | Nhóm B: `__________` (gợi ý: kế toán đối soát hoặc CSKH) |
-|---|---|---|
-| Họ là ai, chạm vào kết quả của trợ lý ở đâu | | |
-| Mục tiêu chính của họ | | |
-| Hiện nay họ xác định "ai chịu lỗi giao trễ" theo các bước nào | | |
-| Cách làm đó đồng đều hay mỗi nơi một kiểu | | |
-| Theo hình dung của họ, **đơn vị chịu lỗi** là gì (đơn / kiện / chặng / tài xế)? | | |
-
-**Hệ thống đang mang hình dung nào?** (đọc trace một ticket hỏng: `tracking.parcels` so với dòng `file_carrier_fault`)
-
-- Với hệ thống, đơn vị chịu lỗi là: `__________`. Bằng chứng: ticket `______@seed ____`, dòng trace: `__________`.
-- Chỗ hai hình dung vênh nhau: `__________`.
-- Khi đầu vào không đủ để áp hình dung của con người (không biết kiện nào), hệ thống đang làm gì: `__________`; nên làm gì: `__________`.
-
-→ Mỗi chỗ vênh là một nhánh của fault tree. Gate tốt làm cho hệ thống hành xử theo hình dung của người chịu hậu quả.
+Không áp dụng cho thẻ S5; nhóm không phân tích thẻ khác. Phần riêng cần trả lời của S5 nằm ở C3.5 và C1.
 
 ### C3.3 · Hiệu chỉnh lòng tin · người đặt hàng và người nhận hàng (S7)
 
-**Cách làm:** đặt ba mốc trên một trục: **không tin · tin vừa đủ · tin quá mức**. Với từng nhóm người, nghĩ ra
-một tình huống đẩy họ về mỗi mốc, rồi ghi hai thứ làm lòng tin lệch: **dữ liệu của hệ thống** có liên quan, và **điều người đó
-biết hay không biết**. Mục tiêu là lòng tin khớp với việc hệ thống thực sự làm. Người nhận hàng không dùng hệ thống, không ký gì với LogiX.
-Chỉ cần hai mốc có trong thẻ; mốc còn lại để trống nếu không có bằng chứng.
-
-| Mốc | Nhóm | Tình huống cụ thể (lấy từ thẻ / ticket) | Dữ liệu của hệ thống liên quan (trường nào, đi tới đâu) | Điều người đó biết / không biết |
-|---|---|---|---|---|
-| **Tin quá mức** | người đặt hàng | | | |
-| **Tin quá mức** | người nhận hàng | | | |
-| **Không tin** (sau sự cố) | người nhận hàng | | | |
-| **Tin vừa đủ** (trạng thái muốn tới) | cả hai | | | |
-
-**Rút ra:**
-- Dữ liệu nào rời hệ thống mà người liên quan **không biết** là nó rời đi: `__________` → tới `__________`.
-- Để lòng tin khớp thực tế, có hai đường: **giải thích** cho người dùng dữ liệu đi đâu, hoặc **làm cho hệ thống chỉ làm đúng
-  điều người ta tưởng**. Với người nhận hàng (không có kênh nào để giải thích), đường khả thi là: `__________`.
-- Biện pháp đó là giảm khả năng lộ hay bảo đảm không lộ: `__________`.
+Không áp dụng cho thẻ S5; nhóm không phân tích thẻ khác. Phần riêng cần trả lời của S5 nằm ở C3.5 và C1.
 
 ### C3.4 · Hiệu chỉnh lòng tin · nhân viên duyệt và trưởng ca đứng tên (S8)
 
-Cùng cách làm như C3.3. Mốc "tin quá mức" là trước kiểm toán, mốc "không tin" là sau kiểm toán.
+Không áp dụng cho thẻ S5; nhóm không phân tích thẻ khác. Phần riêng cần trả lời của S5 nằm ở C3.5 và C1.
 
-| Mốc | Nhóm | Tình huống cụ thể (lấy từ thẻ / ticket) | Dữ liệu của hệ thống liên quan (trường nào, đi tới đâu) | Điều người đó biết / không biết |
-|---|---|---|---|---|
-| **Tin quá mức** (trước kiểm toán) | nhân viên duyệt | | | |
-| **Tin quá mức** (trước kiểm toán) | trưởng ca đứng tên | | | |
-| **Không tin** (sau kiểm toán) | nhân viên duyệt | | | |
-| **Không tin** (sau kiểm toán) | trưởng ca đứng tên | | | |
-| **Tin vừa đủ** (trạng thái muốn tới) | cả hai | | | |
+### C3.5 · Mở lại bản đồ dữ liệu — S5
 
-**Rút ra:**
-- Dữ liệu nào của hệ thống làm lòng tin lệch: `__________`.
-- Để người duyệt thôi kiểm tay từng quyết định, họ cần **thấy** gì ở mỗi quyết định, cần **giữ quyền** ở đâu, và
-  tỉ lệ kiểm mẫu nào hai bên chấp nhận: `__________`. Ghi các con số đó vào `config/operating_gates.json` mục `operations`.
-- Kèm **một dòng** "`issue_refund` trên hạn mức tự động" ở bảng C3.1 Bước 2.
+S5 chỉ áp dụng phần C3.5 và đối chiếu pre-mortem ở C1; các mục C3.1–C3.4 của thẻ khác không áp dụng.
 
-### C3.5 · Mở lại bản đồ dữ liệu (S1, S3, S5; viết bằng bút khác màu)
-
-Mở lại Phiếu B mục B3. Ghi ở đây những dòng đổi so với vòng 1:
-
-| Trường / bảng | Vòng 1 bàn đã coi là (nguồn sự thật / bản sao / chưa hỏi) | Sau khi đọc thẻ thì thấy | Ảnh hưởng tới tiền hay lỗi hãng thế nào |
+| Trường / bảng | Nhận định vòng 1 | Bằng chứng S5 | Ảnh hưởng |
 |---|---|---|---|
-| | | | |
-| | | | |
+| orders.refund_status và ledger | Có kiểm cờ đơn và trùng ticket; chưa kiểm đủ số dư theo order. | S5-02 khác ticket nhưng cùng O-2501; S5-20 có T-CSKH-2520 hoàn tay trong ledger_seed. | Cờ đối soát đêm là bản sao chậm; ledger theo đơn phải quyết định quyền lợi còn lại. |
+| ledger.amount_vnd theo order | Hard cap tổng tiền không đồng nghĩa cap quyền lợi. | S5-21 có 10.000đ hoàn tay, chỉ còn quyền lợi 12.000đ; test chẩn đoán toàn S5 xác nhận. | Hoàn thêm đúng số dư thay vì chặn mọi khoản đã trả một phần hoặc trả lại toàn phần. |
+| warehouse_id, cost_vnd, review_kind | Có theo dõi chi phí tổng; chưa có monitor kho. | HCM-B2B base 11.326đ/ticket vì AI đọc rồi vẫn chuyển người. | Chi phí bình quân toàn hệ thống che phân khúc lỗ; kho ngoài scope không được coi là đã có lời. |
+| Nội dung dài và bảng giá LLM | Trần tiền cấu hình 1.500đ. | S5-70 base 2.018đ; prepared chặn trước đọc và chuyển người. | Vẫn còn công duyệt; monitor handoff là tín hiệu chi phí chứ không bằng chứng tự động hóa thành công. |
 
 ---
 
@@ -338,7 +270,7 @@ Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket t
 | **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Với mỗi kho w: Cw = (tổng cost_vnd + số trial có review_kind × giá một ca duyệt)/số trial kho w; trả max Cw. Recheck tính trọn một ca vì monitor_view không có review_units, nên có thể cao hơn chi phí thực. Thiếu kho gom `?`, không bỏ qua. Danh sách rỗng trả 0 và phải báo kèm tổng mẫu khi vận hành. Chỉ số phụ = số trial có business_gate/cost_budget_per_ticket_vnd chia tổng trial, mỗi trial tính một lần. |
 | **Khung thời gian / ngưỡng báo động** | Đề xuất cho TV1/TV4 xác nhận: đo theo ca, báo khi Cw > 10.000đ (mốc làm tay từ ops_facts); có sự kiện budget handoff thì kiểm tra ngay nguyên nhân và số lượng trong ca. Đây là ngưỡng cảnh báo đề xuất, không sửa tiêu chí đã ký. |
 | **Điểm mù** (chỉ số này KHÔNG thấy gì) | Không gồm phí trực cố định, tiền mất do hoàn sai, lợi ích khách hàng hoặc kho ngoài phạm vi; không thay ROI. Tiền máy và công người tách từ cost_vnd/review_kind; tiền mất phải đối soát ledger thực tế, không lấy nhãn chấm làm telemetry production. Trần trên có thể cảnh báo thừa khi kiểm mẫu ngắn hơn một ca đầy đủ. |
-| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | Grade cuối `R-S5-grade-20261118-173308-883400`: chi phí kho cao nhất ở base trước cổng 10.359đ so S5 11.325,67đ; after base 10.359đ so S5 4.276,75đ. Budget handoff after base 0 so S5 0,30. `monitor ✅`, `regression ✅`, `visible ✅`; integrity còn thiếu 28 file thẻ khác. Không đồng nhất giá trị monitor với chi phí tổng 6.564đ/ticket, vốn có phí trực. |
+| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | Grade cuối `R-S5-grade-20261118-173308-883400`: chi phí kho cao nhất ở base trước cổng 10.359đ so S5 11.325,67đ; after base 10.359đ so S5 4.276,75đ. Budget handoff after base 0 so S5 0,30. `monitor ✅`, `regression ✅`, `visible ✅`; lần đó integrity còn thiếu 28 file; grade đóng gói R-S5-grade-20261118-184018-883400 hiện đã đạt integrity. Không đồng nhất giá trị monitor với chi phí tổng 6.564đ/ticket, vốn có phí trực. |
 
 ---
 
@@ -367,85 +299,87 @@ Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [g
 
 <a id="c10"></a>
 
-## C10 · Câu 3.7 · Risk register (thêm ít nhất 1 dòng sau sự cố)
+## C10 · Câu 3.7 · Risk register sau S5
 
-| Rủi ro | Khả năng | Tác động | Người phụ trách (PIC, một người) | Dấu hiệu (metric nào, ngưỡng nào) | Xử lý | Ảnh hưởng bước đánh giá | Nhóm chức năng (GOVERN / MAP / MEASURE / MANAGE) |
+| Rủi ro | Khả năng | Tác động | PIC | Dấu hiệu | Xử lý | Ảnh hưởng Gate 1 | Nhóm chức năng |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
-
-Quy tắc: **mỗi dòng phải đổi được một quyết định.** Cột "Dấu hiệu" phải là một metric có trong `monitors.py` hoặc trong report.
-
----
+| Hai worker đọc cùng số dư cũ; hoàn tay chưa cập nhật ledger | Chưa đo ngoài mock | Cao: hoàn trùng và lỗi hãng oan | Lê Đoàn Dương | Report/đối soát có wrongful_refund_vnd > 0 hoặc wrongful_carrier_faults > 0; production do NV-OANH xác nhận | Giao dịch/khóa/idempotency ở nơi ghi tiền; đối soát nguồn hoàn tay, thử đồng thời trước mở pilot | Cải tiến thêm, chưa coi mock tuần tự là bằng chứng an toàn production | MANAGE |
+| Phân khúc cần người nhiều, tốn cả AI và công duyệt | Đã thấy tại HCM-B2B base | Cao: lỗ | Đỗ Văn Ngọc | max_warehouse_processing_cost_upper_bound_vnd > 10.000đ; ROI < 0 trong report | Giữ HN/HCM; rà từng kho/ticket, phân luồng sớm; không mở kho sỉ khi chưa có business case | Giữ giới hạn phạm vi và yêu cầu đo lại | MEASURE |
+| Ticket dài làm nhiều ca chuyển do budget | After S5 30% | Trung bình/cao: hàng chờ/chi phí tăng | Nguyễn Hữu Đức | cost_budget_handoff_rate tăng so base 0; queue_stuck > 0 hoặc chờ > 60 phút | Gọi dự phòng ở 3 ca/30 phút; dừng nhận tự động tại ngưỡng B7.6; đo đủ công người | Không mở rộng khi quá tải | MANAGE |
+| Benchmark đẹp nhưng chưa biết test ẩn, chưa diễn tập dừng thật | Chưa kiểm thực tế | Cao | Đoàn Nhật Anh | hidden chưa có; thời gian dừng thực đo > 5 phút, hoặc có lỗi xác nhận dù visible đạt | Bộ kiểm độc lập, diễn tập cảnh báo/dừng và kiểm mẫu; không tự nhận PASS hidden | Cải tiến thêm đến khi có bằng chứng | GOVERN |
 
 <a id="c11"></a>
 
-## C11 · Câu 3.7 · Cập nhật checklist 9 nhóm việc và Runbook phần 4–5
+## C11 · Câu 3.7 · Checklist cập nhật và runbook 4–5
 
-### Cập nhật checklist (bảng gốc ở Phiếu B mục B5)
+Trạng thái dưới đây cập nhật B5 lịch sử. “Xong (mock)” chỉ nói phần trong Lab, không xác nhận go-live thực tế.
 
-Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có tên.
-
-| # nhóm | Trạng thái mới (Xong / Chưa / Không áp dụng) | Bằng chứng mới (mã lần chạy, mục phiếu, số trong report) | PIC |
+| Nhóm B5 | Trạng thái mới | Bằng chứng / việc còn lại | PIC |
 |---|---|---|---|
-| | | | |
-| | | | |
+| 1 Mục tiêu/phạm vi | Xong (hồ sơ mock) | HN/HCM; coverage base 59,09%, S5 33,33%; không mở HCM-B2B | Đỗ Văn Ngọc |
+| 2 Dữ liệu | Xong (kiểm hash mock); chưa xác nhận nguồn thật | integrity đạt; C3.5 phân biệt ledger và cờ đối soát; cần SLA cập nhật thật | Đỗ Văn Ngọc |
+| 3 Chất lượng/an toàn | Xong (visible) | S5 50/50, nền trong phạm vi 65/65; 40 test đạt; hidden chưa có | Đoàn Nhật Anh |
+| 4 Quyền hạn | Xong (cổng mock); chưa phân quyền thật | Guard kiểm chủ đơn/approval; NV-HANH đứng tên, công tắc có sẵn; chưa diễn tập danh tính thật | Lê Đoàn Dương |
+| 5 Hạ tầng/hiệu năng | Chưa go-live | Hàng chờ mock 0, SLA 60 phút; thiếu đo concurrency và lỗi hạ tầng thật | Đoàn Nhật Anh |
+| 6 Chi phí | Xong (mock) | S5 6.564đ/ticket, ROI 0,52; base 5.550đ/ticket, ROI 0,80; chưa dùng số này cam kết production | Đỗ Văn Ngọc |
+| 7 Vận hành | Xong (runbook); chưa diễn tập thật | 1 người/6 ca giờ, kiểm mẫu 10%, cảnh báo mô phỏng; cần tạo kênh và đo dừng <=5 phút | Nguyễn Hữu Đức |
+| 8 Con người/pháp lý | Xong (cổng mock); còn quy trình thật | S5 0 PII/0 lỗi oan; NV-OANH đối soát, cần kênh tiếp nhận khiếu nại thực | Nguyễn Hữu Đức |
+| 9 Quyết định | Hồ sơ đề xuất hoàn chỉnh, chờ nhóm xác nhận | B8 v1 là hồi cứu; C12 đề xuất Cải tiến thêm; không ký thay người | Đỗ Văn Ngọc |
 
-### Runbook 4 · Sau sự cố trên thẻ (vòng 2)
+### Runbook 4 · Sau sự cố
 
 | Câu hỏi | Trả lời |
 |---|---|
-| Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | |
-| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | |
-| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | |
-| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | |
-| Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | |
-| Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | |
-| Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | |
+| Tín hiệu lẽ ra báo trước? | Cần đối soát số dư ledger, chi phí theo kho và ROI gồm tiền mất. Trước S5 đã có budget/scope nhưng chưa có monitor mới, kiểm trùng chỉ theo ticket. |
+| Thêm/đổi ngưỡng? | Không đổi ngưỡng ký. Thêm cảnh báo chi phí kho >10.000đ và theo dõi handoff do budget; an toàn vẫn dung sai 0, ROI tối thiểu 0, SLA 60 phút. |
+| Đổi người? | Không tăng người để làm đẹp kết quả: giữ NV-HANH duyệt 1 người/6 ca giờ, NV-TUNG điều phối. Gọi dự phòng theo B7.6, chỉ ghi tăng công suất khi có người được phân quyền thật. |
+| Đổi phạm vi/quy trình? | Giữ HN/HCM, budget 1.500đ, hoàn tự động 2.000.000đ/ngày, kiểm mẫu 10%, decision_note bật. Sửa kiểm ledger theo order, trả số dư và chống lỗi hãng lặp; kiểm mẫu cả khoản bị từ chối và hoàn một phần. |
+| Thông báo bên bị ảnh hưởng? | Kế hoạch: NV-TUNG dừng thao tác liên quan <=5 phút sau xác nhận lỗi; NV-OANH lập danh sách đơn/khoản/lỗi hãng và phối hợp NV-HANH phản hồi khách/hãng trong cùng ca, mục tiêu <=60 phút. Đây là quy trình đề xuất cần diễn tập, chưa tuyên bố đã liên hệ đối tác. |
+| PII nào đã rời hệ thống? | Report S5 ghi 0 lần rò PII; không khẳng định mọi loại dữ liệu đều đã được detector bao phủ. Nếu có xác nhận thực tế, giữ log tối thiểu và báo NV-TUNG/đầu mối pháp lý; dữ liệu đã gửi không coi là thu hồi được. |
+| Phát hiện từ đâu? | Report S5, trace và ledger_seed của mock. Chưa có phản hồi người thật hoặc thời gian phản ứng thực đo. |
 
-### Runbook 5 · Ba kịch bản "nếu … thì …" cho tuần đầu chạy thử thật
+### Runbook 5 · Ba kịch bản tuần đầu
 
-1. Nếu số ticket tăng gấp ___ lần trong một giờ thì: …
-2. Nếu nhà cung cấp LLM lỗi quá ___ phút thì: …
-3. Nếu người duyệt báo không tin một quyết định của trợ lý thì: …
+1. Nếu lượng ca cần người tăng gấp 3: NV-HANH theo dõi hàng chờ; từ 3 ca hoặc chờ 30 phút gọi dự phòng, từ 6 ca/60 phút chuẩn bị dừng nhận tự động; bắt buộc dừng nếu quá SLA hoặc có 1 ca ùn. Chưa có người thật thì không tự tăng số trong config.
+2. Nếu LLM lỗi liên tục quá 5 phút (ngưỡng vận hành đề xuất): NV-TUNG dừng nhận tự động, chuyển người theo năng lực thật; mọi lệnh ghi vẫn phải có dữ kiện chuẩn, không fail-open. Chỉ mở sau kiểm tra base/S5 và diễn tập cảnh báo.
+3. Nếu người duyệt không tin quyết định: giữ ticket để NV-HANH xem decision_note, tracking/policy/ledger; NV-OANH đối soát khoản đã trả; chưa ghi tiếp khi chưa rõ. Ghi lý do bất đồng, lấy mẫu độc lập và đo công kiểm lại thay vì ép người chấp nhận.
 
 ---
 
 <a id="c12"></a>
 
-## C12 · Quyết định Gate 1 · v2 (phút 185–200)
+## C12 · Quyết định Gate 1 v2
 
-**Trạng thái hiện tại: CHỜ NHÓM CHỐT.** Đã nhận S5 và có report ba mốc; bản sửa nghiệp vụ đạt visible/regression/monitor, ROI +0,52 trong phạm vi HN/HCM, coverage S5 33,33%. Grade `R-S5-grade-20261118-173308-883400` vẫn FAIL tổng thể do integrity thiếu file các thẻ khác; đã kiểm repo mẫu chính thức, grader chưa có sửa tương thích nhận riêng S5. Cần Coach giải quyết đóng gói và nhóm xác nhận v1/v2; chưa tự chọn quyết định thay nhóm.
+**Đề xuất hồ sơ để nhóm xác nhận: Cải tiến thêm.** Kết quả máy là PASS-VISIBLE, đủ để cân nhắc pilot giới hạn nhưng chưa chứng minh giao dịch đồng thời, ledger production đầy đủ hoặc diễn tập vận hành thật. Không ký thay thành viên. v1 ở B8 là đề xuất hồi cứu và không được dùng như bằng chứng đã chốt trước khi nhận thẻ.
 
-Quyết định phải khớp bằng chứng và khớp tiêu chí đã ký. Chọn **Tiếp tục** khi report còn dòng vượt trần, hoặc còn ngưỡng đã ký
-chưa đạt, là quyết định không đạt. **Thu hẹp**, **Cải tiến thêm**, **Dừng** có lý do và có số thì đều là quyết định đạt.
-Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
-
-| | **v2** (phút 185–200, SAU sự cố) |
+| Mục | v2 |
 |---|---|
-| Commit ký tiêu chí | phải giống v1 |
-| Hash chốt cổng vòng 1 | phải giống v1 |
-| Mã lần chạy dùng làm bằng chứng | thẻ, mốc base: ________ · prepared: ________ · after: ________ |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | |
-| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | |
-| Quyết định (khoanh một) | Tiếp tục · Thu hẹp · Cải tiến thêm · Dừng |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | |
-| Bằng chứng 2 | |
-| Bằng chứng 3 | |
-| Khớp dòng nào trong `decision_rule` đã ký? | |
-| Nếu Thu hẹp: cắt kho nào / còn bao nhiêu phần trăm / mấy người trực, và ticket bị cắt đi đâu | |
-| Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | |
-| Nếu Dừng: bài học ghi lại | |
-| Ngày quyết định lại (trừ khi Dừng) | |
-| PIC ký | |
+| Commit ký tiêu chí | d355eb9, hash ce7ab3b6, giữ nguyên |
+| Hash vòng 1 | 300f9086, giữ nguyên |
+| Ba mã S5 | base R-S5-before-20261118-184019-883400; prepared R-S5-prepared-20261118-184019-883400; after R-S5-after-20261118-184020-883400 |
+| Còn vượt trần? | Không ở after S5 và nền trong phạm vi. Integrity đã đạt sau bổ sung đúng file nguồn; không sửa grader/manifest. |
+| Kho/hãng xấu nhất | S5 HN chi phí 4.277đ/ticket, HCM 712đ; đều 0 hoàn sai/lỗi oan. Nền phân khúc chưa biết kho `?` 10.359đ/ticket cần kiểm riêng; không quy thành một kho có thể tự động hóa hiệu quả. |
+| Quyết định | **Cải tiến thêm**, chưa mở pilot thật trước khi hoàn tất bằng chứng C10/C11. |
+| Bằng chứng 1 | R-S5-after-20261118-184020-883400: pass_rate=pass_k=1, S5 50/50; hoàn sai/lỗi oan/PII đều 0. |
+| Bằng chứng 2 | Cùng report: 6.564đ/ticket, ROI +0,52, 0 ùn, LLM cao nhất 764đ; scope vẫn HN/HCM, coverage S5 33,33%. |
+| Bằng chứng 3 | R-S5-grade-20261118-184018-883400: integrity/criteria/visible/regression/monitor đạt, hidden chưa có. Mock chạy tuần tự không xác minh race ở nơi ghi tiền. |
+| decision_rule | Cải tiến thêm theo thiếu bằng chứng an toàn/vận hành production: có biện pháp cụ thể, PIC, hạn; không lấy PASS-VISIBLE làm xác nhận mọi điều kiện ngoài mock. Các ngưỡng số hiện đạt, không ghi giả là còn vượt. |
+| Nếu Thu hẹp | Không chọn thêm lần này; giữ HN/HCM, ngoài phạm vi chuyển thủ công theo năng lực. |
+| Nếu Cải tiến thêm | Dương kiểm nguyên tử/idempotency và dữ liệu hoàn tay; Đức diễn tập dừng/cảnh báo; Nhật Anh kiểm độc lập; Ngọc rà ROI và xác nhận quyết định sau khi có bằng chứng. |
+| Nếu Dừng | Không chọn vì lỗi đã sửa trên visible; sẽ dừng nếu vi phạm an toàn tái diễn theo stop_condition ký. |
+| Ngày quyết định lại | Đề xuất 19/11/2026 17:00 GMT+7; nếu chưa đủ bằng chứng thì tiếp tục chưa mở pilot. |
+| PIC ký | Đỗ Văn Ngọc theo phân công; cần trưởng nhóm đọc và xác nhận, không tạo chữ ký thay. |
 
 **Chỉ ở v2**
-- Quyết định đổi hay giữ so với v1? Vì con số nào: …
-- Report tự kiểm tra: mã lần chạy `__________` · ô nào còn đỏ (nguyên nhân × tầng): …
-- Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: …
-- Report ghi "được phép cân nhắc Tiếp tục" hay "không đủ căn cứ"? Quyết định của bàn có khớp không: …
-- Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: …
 
-**Ba dòng bắt buộc** (chép nguyên ba câu này sang `submission/submission.json`, mục `three_lines`)
-1. **BẢN NHÁP, cần đối chiếu thẻ:** Đội đang giả định tracking/parcel, policy và approval trong hệ thống production được cập nhật đúng lúc và là nguồn sự thật nhất quán; ngoài thực tế scan có thể trễ/sót, policy cache có thể cũ và năng lực người duyệt có thể thay đổi theo giờ cao điểm.
-2. **BẢN NHÁP, chưa kết luận sau sự cố:** Hiện `pre_guard` và `write_gate` vẫn mặc định `Verdict.allow()`, nên bản hiện tại chưa chứng minh có cổng giảm hay ngăn tác hại. Sau khi TV2 triển khai cổng, phải mô tả đúng điều kiện cổng kiểm và bằng chứng `prepared/after` để kết luận nó giảm khả năng hay ngăn được nhánh cụ thể nào.
-3. **BẢN NHÁP, cần cập nhật theo thẻ:** Trước Gate 2 cần đo trên dữ liệu production đã được kiểm soát: đối chiếu khoản hoàn/ghi lỗi với tracking, policy và approval chuẩn; theo dõi lộ PII, thời gian chờ/ca ùn, escalation, chi phí và ROI theo kho/hãng; lấy mẫu độc lập để phát hiện lỗi chưa có khiếu nại. Không lấy số mock làm bằng chứng thay thế dữ liệu thật.
+- Giữ đề xuất Cải tiến thêm so với bản hồi cứu v1; mức tin cậy tăng nhờ S5 sau sửa: hoàn sai 350.000đ -> 0, lỗi oan 15 -> 0, ROI -0,55 -> +0,52; lý do chờ chuyển sang kiểm chứng vận hành và concurrency thật.
+- Grade `R-S5-grade-20261118-184018-883400` đạt mọi mục có thể chạy tại máy; hidden là chưa chạy, không được ghi xanh thay.
+- Prepared đã hạn chế tiền LLM và giới hạn scope; bỏ sót hoàn trùng liên ticket/hoàn tay. Coverage base S5 100% so prepared/after 33,33%, không gán mọi mức giảm tổng thiệt hại cho cổng.
+- Report cho phép cân nhắc Tiếp tục; lựa chọn thận trọng Cải tiến thêm dựa trên rủi ro chưa kiểm chứng, không mâu thuẫn rằng các ngưỡng mock đã đạt.
+- Chưa đo cạnh tranh giữa worker, cập nhật ledger thực, tổn thất thực tế và diễn tập dừng; chưa mở rộng từ mock sang khách thật.
+
+**Ba dòng bắt buộc** — giống submission.json:
+
+1. Đội giả định sổ cái phản ánh đầy đủ mọi khoản hoàn tay và tự động trước lần ghi tiếp theo; ngoài thực tế cập nhật chậm hoặc hai worker đồng thời có thể làm kiểm số dư dựa trên dữ liệu cũ.
+2. Cổng ngăn hoàn vượt quyền lợi còn lại và ghi lỗi hãng lặp trong mô phỏng tuần tự có sổ cái đầy đủ; trong production nó chỉ giảm rủi ro cho tới khi có giao dịch nguyên tử hoặc idempotency tại nơi ghi tiền.
+3. Trước Gate 2 cần đối soát độc lập tổng tiền đã trả theo đơn, đo hoàn trùng khi chạy đồng thời, chi phí gồm AI/công người/tiền mất theo kho, tỷ lệ chuyển do ngân sách, SLA 60 phút và thời gian dừng tối đa 5 phút bằng dữ liệu thật.

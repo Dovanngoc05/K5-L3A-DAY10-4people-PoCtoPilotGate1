@@ -120,7 +120,7 @@ Giải thích một câu: Chưa đủ căn cứ kết luận Y tốt hơn X có 
 
 #### Bước 3 · Chốt và hẹn ngày xem lại
 
-- Bản cuối đề xuất → chép ngưỡng vào `required` / `nice_to_have` / `business_ops`, hành động vào bốn dòng `decision_rule` và `stop_condition` trong `config/acceptance_criteria.json`. Các giá trị ở đây là **đề xuất chưa được bàn thông qua**; TV1/TV3/TV4 cần soát chung trước khi ký.
+- Bản cuối đề xuất → chép ngưỡng vào `required` / `nice_to_have` / `business_ops`, hành động vào bốn dòng `decision_rule` và `stop_condition` trong `config/acceptance_criteria.json`. Bản ký thực tế nằm trong JSON và lock tại commit `d355eb9`; các phương án ở cột phiên bản 2 là phương án cân nhắc, không thay các ngưỡng đã ký.
 - Nhóm `business_ops` (chi phí mỗi ticket tối đa, ROI tối thiểu, số ca ùn tối đa): `cost_per_ticket_vnd_max` **10.000đ** (không đắt hơn làm tay) · `roi_min` **0,00** (ít nhất hòa vốn) · `queue_stuck_max` **0 ca** (không vượt SLA 60 phút hoặc hết ca chưa tới lượt).
 - Ngày xem lại tiêu chí: **trước Gate 2, hoặc chậm nhất 14 ngày sau ngày mở pilot nếu sớm hơn** · Ai dự: **TV1, TV3, TV4, chị Hạnh (NV-HANH), chị Oanh (NV-OANH)**.
 
@@ -147,8 +147,8 @@ git add config/acceptance_criteria.json config/acceptance_criteria.lock && git c
 
 | Mục | Điền |
 |---|---|
-| Đã ký lúc (giờ máy in hoặc `signed_at` trong `config/acceptance_criteria.lock`) | **Chưa ký** — chờ cả bàn duyệt ngưỡng; không chạy eval trước khi ký. |
-| Mã commit `Sign acceptance criteria` (7 ký tự đầu, `git log --oneline -1`) | Chưa có. |
-| Đã push lên `origin main` thành công? | Chưa; thực hiện ngay sau khi ký. |
+| Đã ký lúc (giờ máy in hoặc `signed_at` trong `config/acceptance_criteria.lock`) | `2026-11-18T15:48:12` theo acceptance_criteria.lock; hash `ce7ab3b6` còn nguyên. |
+| Mã commit `Sign acceptance criteria` (7 ký tự đầu, `git log --oneline -1`) | `d355eb9`; có trên origin/main trước lần eval đầu của TV3. |
+| Đã push lên `origin main` thành công? | Có; commit ký nằm trong merge TV1 `23b6213`, trước eval TV3 lúc 16:09:03. |
 
 Sau bước này **không sửa** `config/acceptance_criteria.json`, kể cả mở rồi lưu lại bằng trình soạn thảo tự định dạng.

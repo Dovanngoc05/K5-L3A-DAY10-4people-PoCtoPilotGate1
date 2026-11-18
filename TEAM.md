@@ -1,69 +1,98 @@
-# Team
+# Team — 4people
 
-## Thông tin nhóm
-
-- Tên nhóm (`TenNhom`, không dấu, không khoảng trắng): `4people`
-- Lớp: `L3A`
-- Repo của bàn: `K5-L3A-DAY10-4people-PoCtoPilotGate1`
-- Thẻ sự cố đã bốc (S1–S8): `S5`
+- Nhóm: `4people`; lớp: `L3A`.
+- Repo: `K5-L3A-DAY10-4people-PoCtoPilotGate1`.
+- Thẻ được giao và phân tích: **S5**. Các gói còn lại chỉ được bổ sung để kiểm hash/đóng gói theo yêu cầu của người dùng, không phân tích để làm bài.
 
 ## Thành viên
 
-Họ tên đầy đủ và MSSV của **mọi** thành viên; thêm dòng nếu cần. Vai: Kỹ sư cổng · Sản phẩm và kinh doanh · Vận hành và pháp lý (README mục 3, phút 0–15).
+| Họ tên | MSSV | Vai | Trưởng nhóm |
+|---|---|---|---|
+| Đỗ Văn Ngọc | 2A202603391 | Trưởng nhóm · Sản phẩm và kinh doanh | Có |
+| Đoàn Nhật Anh | 2A202603408 | Kỹ sư cổng · Đánh giá và giám sát |  |
+| Nguyễn Hữu Đức | 2A202603429 | Vận hành và pháp lý |  |
+| Lê Đoàn Dương | 2A202603372 | Kỹ sư cổng · Xây dựng cổng bảo vệ |  |
 
-| STT | Họ và tên | MSSV | Vai | Trưởng nhóm |
-| --: | --------- | ---- | --- | :---------: |
-|   1 |Đỗ Văn Ngọc|2A202603391|Sản phẩm và kinh doanh|Trưởng nhóm|
-|   2 |Đoàn Nhật Anh|2A202603408|Kỹ sư cổng — đánh giá và giám sát||
-|   3 |Nguyễn Hữu Đức|2A202603429|Vận hành và pháp lý| |
-|   4 |Lê Đoàn Dương|2A202603372|Kỹ sư cổng — xây dựng cổng bảo vệ||
+## Trạng thái hồ sơ chung
 
-Ghi `members` trong `submission/submission.json` theo dạng `"HoVaTen-MSSV"`, khớp bảng trên.
+Tiêu chí ký tại d355eb9, hash ce7ab3b6; checkpoint 300f9086 giữ nguyên. Grade cuối `R-S5-grade-20261118-184018-883400`: PASS-VISIBLE, integrity/criteria/visible/regression/monitor đạt, chưa có test ẩn. S5 trong phạm vi HN/HCM: 50/50, coverage 33,33%, không hoàn sai/lỗi oan/PII, chi phí 6.564đ/ticket, ROI +0,52. 40 test đạt.
 
-## Cá nhân
+**Tính xác thực:** checkpoint được tạo sau khi tải gói S5 nhưng trước khi đọc/phân tích; B6/v1 chưa có bản hoàn chỉnh được lưu trước sự cố, nên ghi rõ tổng hợp hồi cứu. Không tạo chữ ký hoặc đổi lịch sử. Các đoạn tự nhận xét bên dưới là gợi ý tổng kết từ bằng chứng, cần từng thành viên đọc, sửa và xác nhận trước khi nộp LMS; không phải lời xác nhận cá nhân đã được thu thập.
 
-Mỗi thành viên tự viết một mục bên dưới (chép mẫu, đổi tiêu đề thành họ tên không dấu và MSSV, ví dụ `## NguyenVanAn-20241234`).
+**Dùng AI:** Codex được dùng để đọc code, chuẩn bị/chỉnh tài liệu, chạy công cụ, tích hợp nhánh, viết monitor, sửa nghiệp vụ S5 và gom bài. Mỗi thành viên cần xác nhận phạm vi dùng AI của mình; tên vai và nhánh là bằng chứng phân công, không chứng minh ai tự gõ toàn bộ code khi Git dùng danh tính chung.
 
-## HoVaTen-MSSV
+## DoVanNgoc-2A202603391
 
 ### Phần việc phụ trách
 
-Vai trong bàn; câu nào của đề, mục nào của phiếu A/B/C, file nào (`lab10/guards.py`, `config/operating_gates.json`, …).
+Phiếu A, bản tiêu chí, business config, quyết định và tích hợp repo.
 
 ### Đóng góp cụ thể
 
-...
+Theo nhánh TV1 và hồ sơ ký: điền tiêu chí và cấu hình kinh doanh; ủy quyền tiếp nhận các nhánh và hoàn thiện hồ sơ. Không suy từ danh tính Git chung ra ai tự gõ từng dòng.
 
 ### Bằng chứng
 
-Mã commit, mã lần chạy (`runs/<mã>`), dòng trong phiếu.
+d355eb9; 752a903; 23b6213; config/acceptance_criteria.json và Phiếu A.
 
 ### Exit ticket
 
-Một điều học được, một điều còn chưa chắc.
+Đề xuất tự nhận xét: chi phí/ticket thấp hơn làm tay chưa đủ chứng minh ROI dương khi còn tiền mất; cần xác minh số liệu và quyền mở pilot thật.
 
 ## DoanNhatAnh-2A202603408
 
 ### Phần việc phụ trách
 
-TV3 — Kỹ sư cổng, đánh giá và giám sát: xác nhận metric offline A2 câu 1.3; baseline và trace B0–B2; tình huống thử B7.3; sau khi nhóm chốt mới đo prepared, sau khi có thẻ mới làm C0–C2 và C8.
+Metric A2, B0–B2/B7.3, C0–C2/C8, monitor, report và tích hợp kiểm thử.
 
 ### Đóng góp cụ thể
 
-Đối chiếu metric TV1 với trường dữ liệu thật; đo lại baseline sau commit ký đã lên origin/main; phân tích hai tác hại hoàn sai và ghi lỗi hãng oan trong T-002@55. Soạn hai ticket thử cùng trạng thái đầu vào để kiểm tra tính bất biến khi khách phóng đại số ngày giao trễ. Dùng Codex hỗ trợ đọc code, soạn tài liệu, chạy lệnh và phân tích trace; thành viên cần kiểm tra và giải thích kết quả khi demo.
+Chạy baseline/trace, soạn behavioral test, tích hợp TV2/TV4; dùng Codex bổ sung monitor, sửa đối soát ledger và lỗi hãng lặp theo yêu cầu, kiểm hash và gom hồ sơ.
 
 ### Bằng chứng
 
-Gốc tích hợp TV1: `23b6213`; commit ký: `d355eb9`. Baseline: `R-base-before-20261118-160903-aca5cb`; sau tích hợp cổng TV2 `58e9fa2`: `R-base-after-20261118-172000-182fc8` (65 trial, coverage 59,09%). B7.3 đã chạy hai ticket, không hoàn sai/ghi lỗi oan; 35/35 test đạt. Report, gate, journal và trace sao lưu ở `docs/tv3-evidence/`. Phiếu A A2, Phiếu B B0–B2/B7.3; kế hoạch bàn giao ở `docs/tv3-preparation.md`. Prepared và monitor chờ các mốc tương ứng.
+24a3e39; 56acf17; 689653c; R-S5-grade-20261118-184018-883400; docs/tv3-evidence/.
 
 ### Exit ticket
 
-Chưa điền — Đoàn Nhật Anh tự ghi điều học được và điều còn chưa chắc trước khi nộp.
+Đề xuất tự nhận xét: phải so cùng phạm vi và tách phát hiện khỏi ngăn tác hại; 40 test và PASS-VISIBLE chưa chứng minh an toàn khi hai worker ghi đồng thời.
 
-### Cập nhật S5
+## NguyenHuuDuc-2A202603429
 
-Cập nhật sau yêu cầu sửa nghiệp vụ: đã bổ sung đối soát ledger theo order, hoàn phần quyền lợi còn lại và chống ghi lỗi hãng lặp; 40 test đạt. Grade `R-S5-grade-20261118-173308-883400` đạt visible/criteria/regression/monitor; S5 50/50, hoàn sai/lỗi hãng oan về 0, ROI +0,52, coverage vẫn 33,33%. Chẩn đoán đủ 150 trial ngoài phạm vi chỉ để kiểm logic cũng đạt. Integrity còn thiếu 28 file thẻ khác; chưa tự sửa grader hoặc lấy thẻ ngoài phân công. Chi tiết mới nhất ở `docs/s5-fix-report.md`; đoạn bên dưới ghi lại trạng thái trước bản sửa này.
+### Phần việc phụ trách
 
-Đã chạy grade đầu trước thay đổi theo thẻ, phân tích ba nguồn tác hại và điền C0–C2/C8. Thêm `max_warehouse_processing_cost_upper_bound_vnd` và `cost_budget_handoff_rate` trong monitors.py, không dùng nhãn chấm. Grade `R-S5-grade-20261118-172739-a2b82f` xác nhận monitor/regression đạt, 35 test đạt; còn 350.000đ hoàn sai, 15 lỗi hãng oan và ROI -0,55, chưa tuyên bố sự cố đã sửa. Chi tiết và công việc bàn giao ở `docs/tv3-s5-handover.md`. Integrity còn thiếu 28 file thẻ khác sau khi khôi phục đúng LF của 23 file hiện có; chờ hướng dẫn Coach. Chưa commit/push phần tích hợp và S5 do lần cấp quyền commit merge trước bị từ chối.
+B4/B5/B7.5/B7.6, config operations/legal, runbook, rủi ro và bài nộp.
 
-Cập nhật TV3 sau tích hợp TV4: config `a065538` đã kết hợp với cổng TV2, 35 test đạt. Prepared `R-base-prepared-20261118-172442-6b6da8`: 65/65 đạt, coverage 59,09%, 5.550đ/ticket, ROI 0,80, 0 ùn, không vi phạm an toàn. Checkpoint `300f9086` đã tạo và verify đạt; chờ nhóm chốt v1 và commit/push mốc vòng 1 trước khi đo S5. Chưa hoàn tất commit merge do yêu cầu cấp quyền bị từ chối.
+### Đóng góp cụ thể
+
+Theo nhánh NguyenHuuDuc: hoàn thiện HAZOP/checklist, kế hoạch một người duyệt, trần chờ, điều kiện dừng và PII. Bản tổng hợp cuối cập nhật C10/C11 dựa trên report chung.
+
+### Bằng chứng
+
+a065538 trên nhánh NguyenHuuDuc; config/operating_gates.json; Phiếu B và C10/C11.
+
+### Exit ticket
+
+Đề xuất tự nhận xét: công suất, người có quyền thật và kênh cảnh báo phải khớp config; chưa biết SLA phản ứng thực tế nếu chưa diễn tập.
+
+## LeDoanDuong-2A202603372
+
+### Phần việc phụ trách
+
+Guards vòng 1, kiểm danh tính/approval/parcel/quyền lợi và test cổng; hỗ trợ phân tích nhánh kỹ thuật S5.
+
+### Đóng góp cụ thể
+
+Theo nhánh LeDoanDuong: pin policy, kiểm quyền lợi/phê duyệt, bảo vệ hãng và payload, sửa liên kết kiện và ngày hết hạn. Bản sửa S5 sau tích hợp được Codex thực hiện theo yêu cầu chung, không gán riêng cho Dương.
+
+### Bằng chứng
+
+03983b0; 56a7d55; 58e9fa2 trên nhánh LeDoanDuong; tests/test_guards.py; lab10/guards_round1.py.
+
+### Exit ticket
+
+Đề xuất tự nhận xét: guard phải kiểm trước nơi ghi và dựa nguồn thật; chống trùng theo ticket chưa đủ, cần kiểm ledger theo order và giao dịch khi có concurrency.
+
+## Trước nộp LMS
+
+Mỗi thành viên xác nhận mục cá nhân và tự nộp cùng link repo bằng tài khoản LMS của mình. Trưởng nhóm xác nhận đề xuất quyết định v1/v2 và các mốc hồi cứu; các mục này không được coi là chữ ký của người đó chỉ vì đã có tên trong file.

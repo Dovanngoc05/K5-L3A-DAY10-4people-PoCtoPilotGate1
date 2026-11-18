@@ -1,3 +1,5 @@
+> Cập nhật cuối hồ sơ: đã bổ sung đủ file thẻ theo yêu cầu người dùng; grade R-S5-grade-20261118-184018-883400 đạt PASS-VISIBLE và integrity. Các trạng thái thiếu file/chưa ký/chưa tích hợp bên dưới là ghi chép lịch sử. Xem submission/REPORT.md và submission/docs/ để đọc hồ sơ cuối.
+
 # TV2 Guard Analysis and Handover
 
 ## Scope and current state

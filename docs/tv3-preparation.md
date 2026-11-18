@@ -1,3 +1,5 @@
+> Cập nhật cuối hồ sơ: đã bổ sung đủ file thẻ theo yêu cầu người dùng; grade R-S5-grade-20261118-184018-883400 đạt PASS-VISIBLE và integrity. Các trạng thái thiếu file/chưa ký/chưa tích hợp bên dưới là ghi chép lịch sử. Xem submission/REPORT.md và submission/docs/ để đọc hồ sơ cuối.
+
 # TV3 — Chuẩn bị đánh giá và giám sát
 
 Tài liệu làm việc hỗ trợ, không thay ba phiếu chính. Đã có baseline và trace thật sau khi tiêu chí TV1 ký được merge lên origin/main. Chưa có checkpoint, prepared, kết quả cổng vòng 1 hay thẻ sự cố.

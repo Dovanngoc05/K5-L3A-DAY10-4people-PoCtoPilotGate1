@@ -1,12 +1,17 @@
 {
-  "team": "",
-  "members": [],
-  "incident": "",
-  "decision_v1": "",
-  "decision_v2": "",
+  "team": "K5-L3A-DAY10-4people-PoCtoPilotGate1",
+  "members": [
+    "DoVanNgoc-2A202603391",
+    "DoanNhatAnh-2A202603408",
+    "NguyenHuuDuc-2A202603429",
+    "LeDoanDuong-2A202603372"
+  ],
+  "incident": "S5",
+  "decision_v1": "Cải tiến thêm",
+  "decision_v2": "Cải tiến thêm",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Đội giả định sổ cái phản ánh đầy đủ mọi khoản hoàn tay và tự động trước lần ghi tiếp theo; ngoài thực tế cập nhật chậm hoặc hai worker đồng thời có thể làm kiểm số dư dựa trên dữ liệu cũ.",
+    "reduce_or_prevent": "Cổng ngăn hoàn vượt quyền lợi còn lại và ghi lỗi hãng lặp trong mô phỏng tuần tự có sổ cái đầy đủ; trong production nó chỉ giảm rủi ro cho tới khi có giao dịch nguyên tử hoặc idempotency tại nơi ghi tiền.",
+    "measure_in_pilot": "Trước Gate 2 cần đối soát độc lập tổng tiền đã trả theo đơn, đo hoàn trùng khi chạy đồng thời, chi phí gồm AI/công người/tiền mất theo kho, tỷ lệ chuyển do ngân sách, SLA 60 phút và thời gian dừng tối đa 5 phút bằng dữ liệu thật."
   }
 }
