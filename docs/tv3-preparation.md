@@ -49,6 +49,8 @@ Bàn giao mã prepared, hash checkpoint và số liệu cho TV1 ghi B8; nhóm co
 
 ## Sau khi nhận đúng thẻ
 
+Nhóm xác nhận S5. Đã lấy duy nhất `incidents/S5/` từ `https://github.com/minhhai203/K5_L3_Day10_PoC-to-Pilot_Gate1_cards`, giữ nguyên bốn file nguồn; chưa mở nội dung thẻ/tickets hoặc chạy sự cố. Khi kiểm tra remote, origin/main ở `23b6213`, cổng TV2 ở origin/LeDoanDuong `56a7d55`, vận hành TV4 ở origin/NguyenHuuDuc `a065538`; chưa nhánh nào trong ba nhánh này có `round1.lock` hoặc bản chụp vòng 1. Cần nhóm tích hợp, kiểm thử và chốt vòng 1 trước khi phân tích S5; không tạo lại hay giả lập checkpoint quá khứ. Khi có mốc prepared, lệnh cần chạy là `python -X utf8 -m lab10.grade --incident S5` trước mọi sửa theo thẻ.
+
 Ghi số thẻ ở Phiếu C. Thay Sx bằng số thật. Chạy `python -m lab10.grade --incident Sx` ngay trước khi ai sửa; lưu mã và report đầu tiên vào C0–C1. Dò ít nhất hai lỗi khác nguồn, có ít nhất một lỗi chìm, ghi ticket@seed và dòng trace ở C2. Cả nhóm đối chiếu pre-mortem.
 
 Monitor C8: chọn tín hiệu bám sự cố, dùng các trường trial không có nhãn như `events`, `ledger`, `faults`, `outbound`, `queue_wait_min`, `queue_stuck`, `cost_vnd`. Không đọc label/pass/kết quả chấm và không nhận diện bằng mã ticket. Hàm nhận `trials`, trả về một số; quy định mẫu số và trường hợp rỗng, đăng ký trong `MONITORS`. `escalation_rate` có sẵn không tính. Chỉ kết luận monitor đạt sau khi grade cho thấy chạy được và giá trị khác giữa sự cố với bộ nền; trường hợp cổng đã chặn tác hại có thể cần theo dõi tín hiệu bị chặn trong events.
