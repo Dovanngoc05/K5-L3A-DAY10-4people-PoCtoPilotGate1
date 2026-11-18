@@ -412,6 +412,8 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 
 ## C12 · Quyết định Gate 1 · v2 (phút 185–200)
 
+**Trạng thái hiện tại: CHƯA THỂ CHỐT.** Chưa nhận/bốc thẻ sự cố (hiện `incidents/` chỉ có README), chưa có report `base · prepared · after` hoặc mã `grade`. Không chọn quyết định cuối và không điền mã/số liệu giả. Phải nhận đúng thẻ, chạy `grade` trước khi sửa, hoàn tất sửa/đánh giá rồi quay lại chốt v2.
+
 Quyết định phải khớp bằng chứng và khớp tiêu chí đã ký. Chọn **Tiếp tục** khi report còn dòng vượt trần, hoặc còn ngưỡng đã ký
 chưa đạt, là quyết định không đạt. **Thu hẹp**, **Cải tiến thêm**, **Dừng** có lý do và có số thì đều là quyết định đạt.
 Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
@@ -442,6 +444,6 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 - Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: …
 
 **Ba dòng bắt buộc** (chép nguyên ba câu này sang `submission/submission.json`, mục `three_lines`)
-1. Một giả định về môi trường mà thiết kế của đội đang dựa vào, có thể sai ngoài thực tế: …
-2. Gate của đội chỉ GIẢM khả năng hay thực sự NGĂN được tác hại? Vì sao: …
-3. Vì data là mock, cần đo lại gì trong pilot thật trước Bước đánh giá 2: …
+1. **BẢN NHÁP, cần đối chiếu thẻ:** Đội đang giả định tracking/parcel, policy và approval trong hệ thống production được cập nhật đúng lúc và là nguồn sự thật nhất quán; ngoài thực tế scan có thể trễ/sót, policy cache có thể cũ và năng lực người duyệt có thể thay đổi theo giờ cao điểm.
+2. **BẢN NHÁP, chưa kết luận sau sự cố:** Hiện `pre_guard` và `write_gate` vẫn mặc định `Verdict.allow()`, nên bản hiện tại chưa chứng minh có cổng giảm hay ngăn tác hại. Sau khi TV2 triển khai cổng, phải mô tả đúng điều kiện cổng kiểm và bằng chứng `prepared/after` để kết luận nó giảm khả năng hay ngăn được nhánh cụ thể nào.
+3. **BẢN NHÁP, cần cập nhật theo thẻ:** Trước Gate 2 cần đo trên dữ liệu production đã được kiểm soát: đối chiếu khoản hoàn/ghi lỗi với tracking, policy và approval chuẩn; theo dõi lộ PII, thời gian chờ/ca ùn, escalation, chi phí và ROI theo kho/hãng; lấy mẫu độc lập để phát hiện lỗi chưa có khiếu nại. Không lấy số mock làm bằng chứng thay thế dữ liệu thật.
