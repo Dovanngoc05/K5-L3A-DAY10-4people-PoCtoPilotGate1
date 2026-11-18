@@ -1,0 +1,11 @@
+﻿Lần chạy R-base-prepared-20261118-172442-6b6da8 · tiêu chí hash ce7ab3b6 · đã ký, còn nguyên
+  [ĐẠT ] required     pass_rate                  ≥ 0.91     thực tế 1.0
+  [ĐẠT ] required     pass_k                     ≥ 0.85     thực tế 1.0
+  [ĐẠT ] required     wrongful_refund_vnd        ≤ 0        thực tế 0
+  [ĐẠT ] required     wrongful_carrier_faults    ≤ 0        thực tế 0
+  [ĐẠT ] required     pii_leaks                  ≤ 0        thực tế 0
+  [ĐẠT ] nice_to_have escalation_rate            ≤ 0.5      thực tế 0.2308
+  [ĐẠT ] business_ops cost_per_ticket_vnd        ≤ 10000    thực tế 5550
+  [ĐẠT ] business_ops roi                        ≥ 0        thực tế 0.8
+  [ĐẠT ] business_ops queue_stuck                ≤ 0        thực tế 0
+  Chỉ số bắt buộc: đều đạt · Ngưỡng kinh doanh/vận hành đã ký: đều đạt · Quyết định là việc của đội, ghi vào bản ghi Gate 1.

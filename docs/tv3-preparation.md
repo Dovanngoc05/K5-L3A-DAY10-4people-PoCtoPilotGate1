@@ -10,6 +10,31 @@ Tài liệu làm việc hỗ trợ, không thay ba phiếu chính. Đã có base
 
 ## Kết quả và bàn giao hiện tại
 
+### Bản sửa nghiệp vụ theo yêu cầu tiếp theo
+
+User đã yêu cầu sửa cả lỗi nghiệp vụ. `_refund_gate` hiện kiểm ledger theo order và hoàn số dư, `_fault_gate` chặn lỗi hãng lặp; không đổi config hoặc snapshot vòng 1. 40 test đạt. Grade cuối `R-S5-grade-20261118-173308-883400`: visible/criteria/regression/monitor đều đạt, after S5 50/50, 0 hoàn sai/0 lỗi hãng oan, ROI +0,52, chi phí 6.564đ/ticket. Phạm vi S5 vẫn 33,33%. Chẩn đoán trong bộ nhớ đủ 150 trial cũng không có ca hỏng; không thay phạm vi trên đĩa. Integrity vẫn thiếu gói thẻ khác; upstream chính thức chưa có bản sửa grader. Xem `docs/s5-fix-report.md` để dùng trạng thái mới nhất; các mục bàn giao bên dưới là lịch sử trước sửa.
+
+### S5 — phần TV3 đã thực hiện
+
+- Đã chạy grade đầu tiên trước thay đổi theo thẻ: `R-S5-grade-20261118-172607-6b6da8`; base/prepared/after lưu trong docs/tv3-evidence/S5-initial. Đã phân tích hoàn trùng liên ticket/hoàn tay, chi phí AI cộng công người ở HCM-B2B, và ticket dài.
+- Đã điền C0–C2 và C8, bổ sung hai monitor không có nhãn vào monitors.py. Không sửa guards.py hoặc quyết định phạm vi/nhân sự của nhóm. Monitor chỉ phát hiện, không khắc phục hoàn trùng.
+- Grade sau thêm monitor `R-S5-grade-20261118-172739-a2b82f`: criteria, regression, monitor đạt; visible chưa đạt: 350.000đ hoàn sai, 15 lỗi hãng oan, ROI -0,55, pass_rate/pass_k 0,70. 35/35 test vẫn đạt. Không có kết quả hidden tests ở máy này.
+- TV2 cần sửa kiểm trùng theo order/ledger, bao gồm hoàn tay và nhiều ticket của một đơn. TV1/TV4 cần xác nhận biện pháp chi phí/phạm vi và hoàn thiện phần Phiếu C thuộc vai mình; v1/v2 chưa được TV3 tự chọn. Chỉ số mới không được dùng để kết luận đã sửa sự cố.
+- Integrity: đã khôi phục 23 file hiện có về byte LF sau khi xác minh SHA256 của bản LF khớp MANIFEST; thêm quy tắc eol=lf theo từng đường dẫn để tránh Git Windows đổi lại. Không sửa nội dung logic file khóa, manifest, tiêu chí hoặc snapshot. Grade mới chỉ còn thiếu 28 file của S1–S4/S6–S8. README repo thẻ yêu cầu chỉ lấy thẻ được giao, trong khi grader kiểm toàn bộ manifest; cần Coach cung cấp cách xử lý chính thức. Không tải/mở thẻ khác và không làm giả integrity đạt.
+- Nội dung xung đột merge đã giải quyết; Git vẫn ghi UU do chưa được phép stage/commit hoàn tất. Chưa push các thay đổi này sau lần từ chối cấp quyền commit merge.
+
+Chi tiết bàn giao và artifact: docs/tv3-s5-handover.md.
+
+### Sau tích hợp NguyenHuuDuc và checkpoint
+
+- Đã kết hợp config operations/legal của `a065538` với cổng TV2; giải quyết xung đột Phiếu B bằng cách giữ nội dung TV3 và bổ sung các dòng thử nghiệm do TV4 ghi. Các report TV4 nêu vẫn ở máy TV4, cần lấy file bằng chứng khi gom bài.
+- Eval tích hợp `R-base-after-20261118-172347-6b6da8`: 65/65 đạt, coverage 0,5909; chi phí 5.550đ/ticket, ROI 0,80, 0 ùn, không hoàn sai/lỗi hãng oan/PII; 35/35 test đạt. Review rate 0,3077 bao gồm kiểm mẫu, khác escalation rate 0,2308.
+- Checkpoint thực hiện lúc 2026-11-18T17:24:42 theo timestamp công cụ, hash `300f908643d9ccd6f8f24d8028656a6bdcd942742a43ccf1b08de0f671d3c492`. Đây là mốc chốt thực tế sau khi đã tải gói S5, trước khi mở/phân tích nội dung S5; không mô tả thành đã chốt trước khi nhận gói thẻ và không sửa/backdate lock.
+- Prepared `R-base-prepared-20261118-172442-6b6da8` giữ cùng kết quả eval tích hợp; criteria verify và checkpoint verify đạt. Bản chụp cổng/config giữ nguyên từ đây.
+- Lệnh hoàn tất commit merge bị từ chối cấp quyền. Merge còn đang chờ Git đánh dấu giải quyết xung đột và commit; chưa push bản tích hợp/checkpoint. Không chạy S5 trước khi nhóm xác nhận v1 và lưu mốc vòng 1; chưa tự chọn quyết định thay TV1.
+
+Các mục lịch sử bên dưới phản ánh trạng thái từng thời điểm, không thay trạng thái tích hợp mới nhất ở trên.
+
 ### Sau tích hợp LeDoanDuong
 
 - Đã merge origin/LeDoanDuong tại `58e9fa2` vào DoanNhatAnh; không thay code cổng của TV2.

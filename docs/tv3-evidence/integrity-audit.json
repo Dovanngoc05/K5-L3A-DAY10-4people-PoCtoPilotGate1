@@ -1,0 +1,206 @@
+﻿[
+    {
+        "path":  "data/tickets.jsonl",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "data/world.json",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "incidents/S1/card.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S1/card.md",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S1/tickets.jsonl",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S1/world_patch.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S2/card.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S2/card.md",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S2/tickets.jsonl",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S2/world_patch.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S3/card.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S3/card.md",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S3/tickets.jsonl",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S3/world_patch.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S4/card.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S4/card.md",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S4/tickets.jsonl",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S4/world_patch.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S5/card.json",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "incidents/S5/card.md",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "incidents/S5/tickets.jsonl",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "incidents/S5/world_patch.json",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "incidents/S6/card.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S6/card.md",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S6/tickets.jsonl",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S6/world_patch.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S7/card.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S7/card.md",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S7/tickets.jsonl",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S7/world_patch.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S8/card.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S8/card.md",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S8/tickets.jsonl",
+        "state":  "missing"
+    },
+    {
+        "path":  "incidents/S8/world_patch.json",
+        "state":  "missing"
+    },
+    {
+        "path":  "lab10/__init__.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/_gradectx.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/_noop_guards.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/agent.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/check_submission.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/checkpoint.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/criteria.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/eval.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/gate.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/grade.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/helpers.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/mock_llm.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/ops.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/tools.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/trace.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "lab10/world.py",
+        "state":  "CRLF-only"
+    },
+    {
+        "path":  "tests/test_public.py",
+        "state":  "CRLF-only"
+    }
+]

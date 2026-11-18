@@ -59,3 +59,11 @@ Gốc tích hợp TV1: `23b6213`; commit ký: `d355eb9`. Baseline: `R-base-befor
 ### Exit ticket
 
 Chưa điền — Đoàn Nhật Anh tự ghi điều học được và điều còn chưa chắc trước khi nộp.
+
+### Cập nhật S5
+
+Cập nhật sau yêu cầu sửa nghiệp vụ: đã bổ sung đối soát ledger theo order, hoàn phần quyền lợi còn lại và chống ghi lỗi hãng lặp; 40 test đạt. Grade `R-S5-grade-20261118-173308-883400` đạt visible/criteria/regression/monitor; S5 50/50, hoàn sai/lỗi hãng oan về 0, ROI +0,52, coverage vẫn 33,33%. Chẩn đoán đủ 150 trial ngoài phạm vi chỉ để kiểm logic cũng đạt. Integrity còn thiếu 28 file thẻ khác; chưa tự sửa grader hoặc lấy thẻ ngoài phân công. Chi tiết mới nhất ở `docs/s5-fix-report.md`; đoạn bên dưới ghi lại trạng thái trước bản sửa này.
+
+Đã chạy grade đầu trước thay đổi theo thẻ, phân tích ba nguồn tác hại và điền C0–C2/C8. Thêm `max_warehouse_processing_cost_upper_bound_vnd` và `cost_budget_handoff_rate` trong monitors.py, không dùng nhãn chấm. Grade `R-S5-grade-20261118-172739-a2b82f` xác nhận monitor/regression đạt, 35 test đạt; còn 350.000đ hoàn sai, 15 lỗi hãng oan và ROI -0,55, chưa tuyên bố sự cố đã sửa. Chi tiết và công việc bàn giao ở `docs/tv3-s5-handover.md`. Integrity còn thiếu 28 file thẻ khác sau khi khôi phục đúng LF của 23 file hiện có; chờ hướng dẫn Coach. Chưa commit/push phần tích hợp và S5 do lần cấp quyền commit merge trước bị từ chối.
+
+Cập nhật TV3 sau tích hợp TV4: config `a065538` đã kết hợp với cổng TV2, 35 test đạt. Prepared `R-base-prepared-20261118-172442-6b6da8`: 65/65 đạt, coverage 59,09%, 5.550đ/ticket, ROI 0,80, 0 ùn, không vi phạm an toàn. Checkpoint `300f9086` đã tạo và verify đạt; chờ nhóm chốt v1 và commit/push mốc vòng 1 trước khi đo S5. Chưa hoàn tất commit merge do yêu cầu cấp quyền bị từ chối.
