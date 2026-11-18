@@ -15,6 +15,7 @@ from .tools import Verdict
 
 _PHONE = re.compile(r"(?<!\w)(?:\+?\d[\s().-]*){8,}\d(?!\w)")
 _EMAIL = re.compile(r"\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b")
+MAX_REFUND_PER_ORDER_VND = 2_000_000
 
 
 def _effective_policy(ctx):
@@ -71,6 +72,10 @@ def _refund_gate(ctx, action):
     if isinstance(amount, bool) or not isinstance(amount, int) or amount <= 0:
         ctx.log("refund_amount_invalid")
         return Verdict.deny("số tiền hoàn không phải số nguyên dương hợp lệ")
+    if amount > MAX_REFUND_PER_ORDER_VND:
+        ctx.log("refund_hard_cap_exceeded", amount_vnd=amount,
+                cap_vnd=MAX_REFUND_PER_ORDER_VND, scope="per_order")
+        return Verdict.deny("số tiền hoàn vượt hard cap 2.000.000 VND mỗi đơn hàng")
 
     ticket_id = action.get("ticket_id")
     order_id = action.get("order_id")
@@ -127,6 +132,11 @@ def _refund_gate(ctx, action):
     except (KeyError, TypeError, ValueError):
         ctx.log("refund_limits_unavailable")
         return Verdict.escalate("không xác minh được hạn mức vận hành")
+    order_total = sum(r.get("amount_vnd", 0) for r in today_rows if r.get("order_id") == order_id)
+    if order_total + amount > MAX_REFUND_PER_ORDER_VND:
+        ctx.log("refund_order_hard_cap_exceeded", order_id=order_id, prior_refund_vnd=order_total,
+                amount_vnd=amount, cap_vnd=MAX_REFUND_PER_ORDER_VND)
+        return Verdict.deny("tổng tiền hoàn cho đơn hàng sẽ vượt hard cap 2.000.000 VND")
     if not approval_valid:
         customer_cap = limits.get("max_auto_refund_per_customer_per_day_vnd")
         customer_total = sum(r.get("amount_vnd", 0) for r in customer_rows

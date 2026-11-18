@@ -1,5 +1,6 @@
 """Focused tests for the TV2 system-level write gates."""
 import unittest
+from copy import deepcopy
 from pathlib import Path
 import sys
 
@@ -16,8 +17,8 @@ class GuardChecks(unittest.TestCase):
         cls.data, cls.tickets = load_suite("base")
         cls.by_id = {t["ticket_id"]: t for t in cls.tickets}
 
-    def context(self, ticket_id):
-        world = World(self.data)
+    def context(self, ticket_id, data=None):
+        world = World(data or self.data)
         ticket = dict(self.by_id[ticket_id])
         events = []
         ctx = Ctx(ticket=ticket, seed=11, tools=ReadTools(world), switches={}, events=events,
@@ -67,6 +68,44 @@ class GuardChecks(unittest.TestCase):
         v = guards.write_gate(ctx, {"tool": "issue_refund", "ticket_id": "T-008", "order_id": "O-1008",
                                     "amount_vnd": 230000, "payer": "LOGIX", "approval_id": "A-0008"})
         self.assertEqual(v.action, "allow")
+
+    def _high_value_approval_data(self, max_vnd):
+        data = deepcopy(self.data)
+        data["approvals"].append({"approval_id": "A-HIGH", "ticket_id": "T-008", "order_id": "O-1008",
+                                  "customer_id": "C-08", "approver_id": "NV-HANH", "max_vnd": max_vnd,
+                                  "expires_at": data["as_of"], "status": "valid"})
+        return data
+
+    def test_refund_2000001_is_denied_with_hard_cap_log(self):
+        ctx = self.context("T-008", self._high_value_approval_data(2_000_001))
+        v = guards.write_gate(ctx, {"tool": "issue_refund", "ticket_id": "T-008", "order_id": "O-1008",
+                                    "amount_vnd": 2_000_001, "payer": "LOGIX", "approval_id": "A-HIGH"})
+        self.assertEqual(v.action, "deny")
+        self.assertIn("2.000.000", v.reason)
+        self.assertTrue(any(e.get("kind") == "refund_hard_cap_exceeded"
+                            and e.get("amount_vnd") == 2_000_001 for e in ctx.events))
+
+    def test_refund_2000000_passes_hard_cap_then_normal_checks(self):
+        data = self._high_value_approval_data(2_000_000)
+        order = next(o for o in data["orders"] if o["order_id"] == "O-1008")
+        order["goods_value_vnd"] = 2_000_000
+        order["shipping_fee_vnd"] = 0
+        policy = next(p for p in data["policies"] if p["policy_id"] == "REFUND-v3")
+        policy["late"]["bonus_pct"] = 100
+        policy["late"]["bonus_cap_vnd"] = 2_000_000
+        ctx = self.context("T-008", data)
+        v = guards.write_gate(ctx, {"tool": "issue_refund", "ticket_id": "T-008", "order_id": "O-1008",
+                                    "amount_vnd": 2_000_000, "payer": "LOGIX", "approval_id": "A-HIGH"})
+        self.assertEqual(v.action, "allow")
+        self.assertFalse(any(e.get("kind") in ("refund_hard_cap_exceeded", "refund_order_hard_cap_exceeded")
+                             for e in ctx.events))
+
+    def test_valid_approval_cannot_exceed_hard_cap(self):
+        ctx = self.context("T-008", self._high_value_approval_data(2_000_001))
+        v = guards.write_gate(ctx, {"tool": "issue_refund", "ticket_id": "T-008", "order_id": "O-1008",
+                                    "amount_vnd": 2_000_001, "payer": "LOGIX", "approval_id": "A-HIGH"})
+        self.assertEqual(v.action, "deny")
+        self.assertTrue(any(e.get("kind") == "refund_hard_cap_exceeded" for e in ctx.events))
 
     def test_carrier_fault_requires_canonical_delay_and_cause(self):
         ctx = self.context("T-001")
