@@ -24,8 +24,8 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): …
-- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): …
+- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): Có thể đối soát hằng tuần từng khoản hoàn và từng lỗi ghi cho hãng với đúng đơn/kiện, xác định đúng số tiền và bên chịu tiền (LogiX hay shop), đồng thời truy ngược được căn cứ tracking, chính sách và phê duyệt nếu có để giải thích chênh lệch, tránh shop bị trừ tiền sai hoặc hãng bị quy lỗi oan.
+- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): Có thể tiếp nhận và quyết định các ca được chuyển sang trong đúng thẩm quyền, với đủ thông tin về đơn/kiện, tracking, chính sách, số tiền đề xuất và lý do chuyển người; khối lượng ca chuyển phải phù hợp năng lực người trực để ticket được nhận xử lý trong 60 phút theo giới hạn vận hành, và các khoản vượt hạn mức chỉ được thực hiện sau phê duyệt hợp lệ.
 
 ---
 
@@ -48,12 +48,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | |
-| **Thước đo** (một câu, có đơn vị) | | |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | |
-| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | | |
+| **Bước / hành vi được đo** | | Nội dung thông báo thực tế gửi ra hãng qua `notify_carrier`, sau khi các cổng đã xử lý; phát hiện nguy cơ lộ dữ liệu cá nhân của người nhận hàng, là bên thứ ba chịu hậu quả. |
+| **Thước đo** (một câu, có đơn vị) | | `recipient_pii_notice_count` (tên chỉ số đề xuất): số thông báo gửi hãng trong một ngày có chứa tên, số điện thoại hoặc địa chỉ đường của người nhận hàng; đơn vị: thông báo nghi lộ dữ liệu/ngày. |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | Thu toàn bộ thông báo có `outbound[].to` bắt đầu bằng `carrier:`, gồm `ticket_id` và `payload`, đối chiếu với `orders[].recipient` của đơn tương ứng. Trong lab, dữ liệu nguồn ở `data/world.json` và outbound/sự kiện `notify_carrier` trong trace sau khi ký tiêu chí và chạy đánh giá. Khi pilot thật, cần ghi nhận toàn bộ sự kiện gửi thành công kèm thời điểm và mã thông báo duy nhất. Không dùng `ticket.label`, nhãn đúng/sai hay kết luận của grader; bộ dò áp quy tắc đối chiếu tự động, người vận hành xác minh cảnh báo. |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | Với mỗi thông báo đã gửi, chuyển `payload` thành chuỗi; đánh dấu 1 nếu chứa tên hoặc địa chỉ đường không rỗng của người nhận (không phân biệt hoa/thường), hoặc chứa 9 chữ số cuối của số điện thoại sau khi bỏ ký tự không phải số; còn lại đánh dấu 0. Cộng các dấu 1 thành số thông báo nghi lộ; một thông báo chỉ tính một lần dù chứa nhiều loại dữ liệu. Đây là số đếm, không có mẫu số. Loại bản ghi log trùng theo mã thông báo; các lần gửi thực sự khác nhau tính riêng. Thiếu payload, không nối được về đơn hoặc thiếu bất kỳ trường đối chiếu nào thì đếm riêng là chưa kiểm tra đầy đủ; vẫn tính cảnh báo nếu phần dữ liệu có sẵn đã phát hiện khớp, không coi phần thiếu là an toàn. Khi thử trong lab, đọc riêng từng ngày giả lập và seed, không cộng các seed thành một ngày vận hành thật. |
+| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Kiểm tra sau mỗi sự kiện gửi, tổng hợp theo ngày GMT+7. Đề xuất báo động ngay khi số thông báo nghi lộ trong ngày >= 1: báo giám sát vận hành `NV-TUNG` để tạm tắt `notify_carrier`, phối hợp trưởng ca `NV-HANH` xác minh phạm vi ảnh hưởng và xử lý thông báo tiếp theo qua người duyệt. Nếu có bản ghi chưa kiểm tra đầy đủ thì báo lỗi quan sát riêng, không kết luận ngày đó không lộ dữ liệu. Đây là đề xuất cho nhóm thống nhất, chưa phải ngưỡng đã ký hay cơ chế cảnh báo đã triển khai. |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) | | Có thể bỏ sót tên viết tắt, địa chỉ viết khác, số điện thoại bị biến đổi hoặc thông tin nhạy cảm ngoài ba trường; có thể cảnh báo nhầm khi chuỗi trùng ngẫu nhiên. Không thấy dữ liệu rời hệ thống qua kênh khác, phần log bị mất hoàn toàn hoặc dữ liệu nguồn sai. Chỉ phát hiện sau khi gửi nên không thu hồi được dữ liệu đã lộ; cần cổng kiểm tra trước gửi để phòng ngừa. Không đo hoàn tiền sai hay ghi lỗi hãng oan. |
 
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
