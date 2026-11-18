@@ -2,9 +2,9 @@
 
 ## Thông tin nhóm
 
-- Tên nhóm (`TenNhom`, không dấu, không khoảng trắng):
-- Lớp: `L3A` / `L3B`
-- Repo của bàn: `K5-<L3A|L3B>-DAY10-<TenNhom>-PoCtoPilotGate1`
+- Tên nhóm (`TenNhom`, không dấu, không khoảng trắng): `4people`
+- Lớp: `L3A`
+- Repo của bàn: `K5-L3A-DAY10-4people-PoCtoPilotGate1`
 - Thẻ sự cố đã bốc (S1–S8):
 
 ## Thành viên
@@ -41,3 +41,21 @@ Mã commit, mã lần chạy (`runs/<mã>`), dòng trong phiếu.
 ### Exit ticket
 
 Một điều học được, một điều còn chưa chắc.
+
+## DoanNhatAnh-2A202603408
+
+### Phần việc phụ trách
+
+TV3 — Kỹ sư cổng, đánh giá và giám sát: xác nhận metric offline A2 câu 1.3; baseline và trace B0–B2; tình huống thử B7.3; sau khi nhóm chốt mới đo prepared, sau khi có thẻ mới làm C0–C2 và C8.
+
+### Đóng góp cụ thể
+
+Đối chiếu metric TV1 với trường dữ liệu thật; đo lại baseline sau commit ký đã lên origin/main; phân tích hai tác hại hoàn sai và ghi lỗi hãng oan trong T-002@55. Soạn hai ticket thử cùng trạng thái đầu vào để kiểm tra tính bất biến khi khách phóng đại số ngày giao trễ. Dùng Codex hỗ trợ đọc code, soạn tài liệu, chạy lệnh và phân tích trace; thành viên cần kiểm tra và giải thích kết quả khi demo.
+
+### Bằng chứng
+
+Gốc tích hợp TV1: `23b6213`; commit ký: `d355eb9`. Lần đo: `R-base-before-20261118-160903-aca5cb`; report và trace sao lưu ở `docs/tv3-evidence/`. Phiếu A A2, Phiếu B B0–B2/B7.3; kế hoạch bàn giao ở `docs/tv3-preparation.md`. B7.3 chưa chạy, prepared và monitor chờ các mốc tương ứng.
+
+### Exit ticket
+
+Chưa điền — Đoàn Nhật Anh tự ghi điều học được và điều còn chưa chắc trước khi nộp.
