@@ -87,11 +87,15 @@ Theo nhánh LeDoanDuong: pin policy, kiểm quyền lợi/phê duyệt, bảo v�
 
 ### Bằng chứng
 
-03983b0; 56a7d55; 58e9fa2 trên nhánh LeDoanDuong; tests/test_guards.py; lab10/guards_round1.py.
+03983b0; 56a7d55; 58e9fa2 trên nhánh LeDoanDuong; tests/test_guards.py; lab10/guards_round1.py. Bàn giao tài liệu và regression tests: `06301e0`. Sau khi tích hợp `origin/main`, `python3 -m unittest discover -s tests -v`: 44 test PASS; `python3 -m lab10.criteria verify`: `ok: true`; `git diff --check`: PASS.
 
 ### Exit ticket
 
 Đề xuất tự nhận xét: guard phải kiểm trước nơi ghi và dựa nguồn thật; chống trùng theo ticket chưa đủ, cần kiểm ledger theo order và giao dịch khi có concurrency.
+
+### Sử dụng AI
+
+Đã dùng Codex để rà soát code và Git history, bổ sung regression tests, cập nhật báo cáo kỹ thuật và hỗ trợ tích hợp nhánh. Tôi đã kiểm tra kết quả bằng test suite và xác minh criteria; không dùng AI để ký tiêu chí hoặc quyết định thay nhóm.
 
 ## Trước nộp LMS
 

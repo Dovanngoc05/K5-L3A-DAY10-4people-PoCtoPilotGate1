@@ -1,14 +1,12 @@
-> Cập nhật cuối hồ sơ: đã bổ sung đủ file thẻ theo yêu cầu người dùng; grade R-S5-grade-20261118-184018-883400 đạt PASS-VISIBLE và integrity. Các trạng thái thiếu file/chưa ký/chưa tích hợp bên dưới là ghi chép lịch sử. Xem submission/REPORT.md và submission/docs/ để đọc hồ sơ cuối.
+# TV2 Guard Engineering: specification, review, and handover
 
-# TV2 Guard Analysis and Handover
-
-> Phạm vi: phân tích kỹ thuật phần Guard hiện có trên `LeDoanDuong`. Tài liệu này không phải Phiếu C của một incident cụ thể. Trong repository hiện chỉ có `incidents/README.md`; chưa có thẻ S1–S8 hay số thẻ được xác nhận. Vì vậy không chọn incident, không viết C3 theo giả định và không tuyên bố đã hoàn thành incident grade.
+> Phạm vi: bàn giao kỹ thuật phần Guard TV2. Bản ghi ban đầu được soạn trước khi nhóm nhận S5; sau đó `origin/main` đã tích hợp thẻ S5, hồ sơ incident và kết quả tổng hợp. Tài liệu này giải thích Guard và các kiểm soát liên quan; Phiếu C/S5 chính thức nằm trong `submission/docs/form-c-incident.md`, kết quả tích hợp trong `submission/REPORT.md` và `docs/s5-fix-report.md`. Không thay thế hoặc viết lại hồ sơ của các owner đó.
 
 ## Trạng thái và bằng chứng kiểm tra
 
-- Branch/commit được kiểm tra: `LeDoanDuong`, `58e9fa2` (`Fix parcel binding and approval expiry guards`). Các commit TV2 liên quan: `937e234`, `03983b0`, `4ef1272`, `56a7d55`, `58e9fa2`.
-- Lần chạy xác minh gần nhất ghi dưới đây dùng Guard source tại `58e9fa2` và test file hiện tại trong working tree (có regression tests TV2 bổ sung chưa commit). Không thay đổi code Guard hay acceptance criteria.
-- Không chạy `lab10.eval`, `lab10.grade` hoặc checkpoint. Không sửa acceptance criteria/lock, cấu hình vận hành, monitors, snapshot vòng 1 hay submission.
+- Nhánh TV2 `LeDoanDuong` được nhập cùng `origin/main` tới commit tích hợp hiện tại; lịch sử Guard TV2 gồm `937e234`, `03983b0`, `4ef1272`, `56a7d55`, `58e9fa2`. Main có cập nhật tiếp theo, gồm `689653c` cho đối soát refund theo order và `d38ceff` cho hồ sơ S5.
+- Lần chạy mới nhất dưới đây dùng code/test trên merge tree tích hợp; không thay đổi acceptance criteria/lock.
+- Không chạy evaluation/grade/checkpoint trong lượt merge này. Giữ nguyên cấu hình, monitors, snapshots và submission từ `origin/main`.
 
 ## C5 — Technical Specification (mức hệ thống)
 
@@ -23,7 +21,7 @@ Nguồn xác thực của Guard là ticket trong context và dữ liệu đọc 
 | Guard | Mục tiêu, input và kiểm tra | Allow / deny / failure | Bằng chứng test |
 |---|---|---|---|
 | `pre_guard` / `_effective_policy` | Đọc ngày từ `ctx.as_of`, fallback `ctx.tools.as_of`; chọn policy hiệu lực từ policy store. | Allow và pin `policy_id` khi policy xác minh được; thiếu policy/ngày hợp lệ thì escalate. | `test_pre_guard_pins_effective_policy`; `test_missing_or_invalid_context_and_tools_dates_never_allow_refund` |
-| `_refund_gate` — hard cap | Action gồm `amount_vnd`, ticket/order, payer, approval. Bác bool, số không nguyên, <=0; amount > 2.000.000 bị deny trước khi xem approval. Sau đó còn kiểm tổng đã hoàn cho order + amount <= 2.000.000. | Hard cap áp dụng cả khi có approval; đúng 2.000.000 chỉ vượt qua riêng kiểm tra cap, vẫn phải thỏa entitlement, payer, approval (nếu cần), duplicate check và operating limits. | `test_refund_2000001_is_denied_with_hard_cap_log`, `test_refund_2000000_passes_hard_cap_then_normal_checks`, `test_valid_approval_cannot_exceed_hard_cap`, `test_valid_approval_cannot_push_order_total_over_hard_cap` |
+| `_refund_gate` — hard cap và sổ cái | Bác bool, số không nguyên, <=0; amount > 2.000.000 bị deny. Đọc ledger theo order để phát hiện hoàn trùng liên ticket/manual, kiểm dữ liệu ledger hợp lệ, tổng tiền đã trả và phần entitlement còn lại; refund một phần được `modify` xuống số dư quyền lợi còn lại. | Hard cap áp dụng cả khi có approval; tổng ledger + khoản mới không vượt 2.000.000. Sau đối soát vẫn phải thỏa identity, parcel, policy, payer, approval, operating limits và duplicate checks. | Hard cap: `test_refund_2000001_is_denied_with_hard_cap_log`, `test_refund_2000000_passes_hard_cap_then_normal_checks`, `test_valid_approval_cannot_exceed_hard_cap`, `test_valid_approval_cannot_push_order_total_over_hard_cap`. Order reconciliation: các test trong `tests/test_refund_reconciliation.py`. |
 | `_refund_gate` — identity/parcel/entitlement | Ticket/order action phải bằng ticket hiện tại; order phải thuộc customer ticket; parcel canonical là `ticket.parcel_id` nếu có, nếu không dùng helper chọn parcel trễ nhất theo tracking; action parcel nếu được gửi phải khớp. Tính delay/cause/entitlement từ tracking và policy, payer phải `LOGIX`. | Sai ticket/order bị escalate; parcel mismatch bị deny; thiếu dữ liệu xác minh bị escalate; vượt entitlement hoặc không có quyền lợi bị deny. | `test_wrong_order_or_payer_is_blocked`, `test_refund_rejects_mismatched_ticket_id`, `test_refund_denies_action_parcel_different_from_ticket_parcel`, `test_refund_uses_tracking_not_customer_claim`, `test_ticket_parcel_p1_still_allows_valid_refund_fault_and_notice` |
 | `_refund_gate` — approval và hạn mức | Approval phải khớp ticket, order, customer, status=`valid`, max_vnd >= amount và `expires_at >=` ngày tham chiếu hợp lệ. Ngoài ra kiểm tổng order, hạn mức customer/day, finance/day và duplicate ticket. | Approval không thay thế hard cap/entitlement. Approval thiếu, hết hạn hoặc sai phạm vi thì không allow; thiếu ngày tham chiếu thì fail closed (escalate). Không xác minh được limits thì escalate. | `test_exact_valid_approval_allows_policy_entitlement`, `test_expired_approval_uses_tools_date_when_context_date_empty_or_invalid`, `test_unexpired_approval_uses_tools_date_fallback`, `test_unverified_approval_cannot_bypass_auto_limits` |
 | `_fault_gate` | Ticket ID/order/customer phải khớp; parcel phải canonical; delay tính từ promised/delivered/as_of; delay đạt `policy.late.min_days_fee`; cause nằm trong `policy.fault_causes`; carrier và delay action khớp parcel/tracking. | Chỉ allow khi toàn bộ bằng chứng chính thức khớp. Thiếu/sai bằng chứng, ticket sai hoặc parcel khác đều deny. | `test_carrier_fault_requires_canonical_delay_and_cause`, `test_fault_denies_action_parcel_different_from_ticket_parcel`, `test_non_refund_writes_reject_mismatched_ticket_id` |
@@ -73,6 +71,7 @@ flowchart TD
 | Action parcel khác parcel của ticket | `_ticket_parcel` chọn parcel theo ticket nếu có; nếu không, helper chọn parcel trễ nhất theo tracking. `_parcel` báo mismatch, các gate refund/fault/notice deny; không xác định được parcel thì không allow. | `lab10/guards.py::_ticket_parcel`, `_parcel`, `_refund_gate`, `_fault_gate`, `_carrier_notice` | `test_refund_denies_action_parcel_different_from_ticket_parcel`, `test_fault_denies_action_parcel_different_from_ticket_parcel`, `test_notice_denies_action_parcel_different_from_ticket_parcel`; `test_ticket_parcel_p1_still_allows_valid_refund_fault_and_notice` | Đã triển khai; kiểm chứng bằng test. |
 | Ngày expiry thiếu/sai hoặc `ctx.as_of` rỗng | `_as_of_date` parse ngày context trước, sau đó fallback tools; approval expiry parse thành ngày; thiếu ngày xác minh làm policy/refund escalate. | `lab10/guards.py::_as_of_date`, `_effective_policy`, `_refund_gate` | `test_expired_approval_uses_tools_date_when_context_date_empty_or_invalid`; `test_missing_or_invalid_context_and_tools_dates_never_allow_refund`; `test_impossible_context_calendar_date_falls_back_to_valid_tools_date`; `test_unexpired_approval_uses_tools_date_fallback` | Đã triển khai; ngày lịch không tồn tại bị parser từ chối; kiểm chứng bằng test. |
 | Carrier notice nhận dữ liệu do Agent cung cấp | Guard dựng payload mới từ facts canonical và field allowlist của policy. | `lab10/guards.py::_carrier_notice` | `test_carrier_notice_is_minimized_from_verified_facts` | Đã triển khai; kiểm chứng bằng test. |
+| Hoàn trùng giữa ticket khác nhau/hoàn tay một phần (bổ sung trong tích hợp main, `689653c`) | Đọc ledger authoritative theo order, fail closed nếu ledger malformed, ngăn trả lại quyền lợi đã chi và chỉ trả phần còn lại. Đây là remediation tích hợp sau các commit Guard ban đầu, không gán riêng cho nhánh TV2. | `lab10/guards.py::_refund_gate` | `test_new_ticket_cannot_repay_fully_refunded_order`, `test_partial_manual_refund_only_pays_balance_and_reports_it`, `test_two_different_requests_share_order_entitlement`, `test_unparseable_ledger_is_handed_to_reconciliation` | Có code và test trên merge tree. |
 | PII trong customer reply | Ẩn email/phone theo regex và dữ liệu định danh đã biết; xác minh recipient trước gửi. | `lab10/guards.py::_customer_reply` | `test_reply_redacts_contact_details_and_rejects_wrong_recipient` | Đã triển khai với phạm vi phát hiện giới hạn; không bảo đảm nhận diện mọi PII. |
 
 Lý do fail-closed: thiếu identity, tracking, policy, approval date hoặc operating limit thì Guard không có bằng chứng để chứng minh write an toàn. Với refund, một allow sai có thể tạo tác động tài chính không thể thu hồi bởi các bước fault/notice sau đó; với fault, bằng chứng không đủ có thể gây ghi lỗi oan; với notice, payload tối thiểu giảm dữ liệu rời khỏi hệ thống.
@@ -85,16 +84,17 @@ Lý do fail-closed: thiếu identity, tracking, policy, approval date hoặc ope
 - Ticket ID sai trên refund/fault/notice/reply đều có test trực tiếp. Parcel action khác canonical ticket được test riêng trên refund, fault và notice.
 - Approval expiry dùng ngày chuẩn từ context hoặc fallback trusted tools; ngày thiếu/sai không được phép tạo allow.
 - Carrier notice được dựng lại từ trường canonical/allowlisted; reply có recipient guard và redaction các pattern đã biết.
+- Main tích hợp thêm reconciliation theo order: ticket khác không thể thanh toán lại entitlement đã dùng, hoàn tay một phần chỉ được trả số còn lại, ledger malformed được chuyển đối soát, và carrier fault bị replay sẽ bị deny. Các test tương ứng nằm trong `tests/test_refund_reconciliation.py`; đây là phần tích hợp `689653c`, không quy công cho commit TV2 gốc.
 
 ### B. Guard chặn an toàn nhưng lỗi tích hợp bên ngoài vẫn còn
 
-Trong `lab10/agent.py`, Agent tính `worst = max(parcels, key=delay)` và lấy `delay/cause` từ parcel này (khoảng dòng 113–115), nhưng khi gọi `file_carrier_fault` dùng `first = parcels[0]` cho `parcel_id` và `carrier_id` (khoảng dòng 194–198). Với ticket không chỉ định parcel, Guard helper chọn parcel trễ nhất; nếu parcel đầu tiên khác parcel trễ nhất, action fault không nhất quán và Guard deny. Notice sau fault chỉ chạy nếu fault write thành công. Refund được thử trước đó nên có thể đã được ghi, trong khi fault/notice bị bỏ qua.
+Trong `lab10/agent.py`, Agent tính `worst = max(parcels, key=delay)` và lấy `delay/cause` từ parcel này (khoảng dòng 113–115), nhưng khi gọi `file_carrier_fault` dùng `first = parcels[0]` cho `parcel_id` và `carrier_id` (khoảng dòng 194–198). Guard kiểm parcel/carrier/delay so với parcel canonical của ticket (ticket parcel nếu có, nếu không thì parcel trễ nhất). Vì vậy, khi ticket không chỉ định parcel và parcel đầu khác parcel trễ nhất, ID/carrier action lệch; khi ticket chỉ định parcel đầu nhưng parcel trễ nhất khác, ID có thể khớp nhưng `delay_days` vẫn lệch. Cả hai trường hợp đều có thể khiến Guard deny fault. Notice sau fault chỉ chạy nếu fault write thành công. Refund được thử trước đó nên có thể đã được ghi, trong khi fault/notice bị bỏ qua.
 
 Khuyến nghị cho owner Agent (TV2 không sửa workflow ngoài phạm vi): chọn một parcel duy nhất, rồi lấy `parcel_id`, `carrier_id` và `delay_days` từ chính parcel đó cho fault; payload notice phải tiếp tục dùng parcel từ kết quả fault/cùng lựa chọn đó. Không nới Guard để hợp thức hóa parcel không nhất quán. Test hiện tại xác nhận ticket P1 cụ thể vẫn allow hợp lệ; chưa có end-to-end test chứng minh Agent chọn cùng parcel trong trường hợp nhiều parcel.
 
 ### C. Chưa xử lý / còn giới hạn
 
-- Incident-specific C3/C5/C6/C7/C9, monitor mới, incident grade và so sánh base/prepared/after chưa thể làm: không có card S1–S8/incident fixtures trong repository, và các phần monitor/evaluation thuộc workflow/owner khác.
+- S5 hiện là thẻ được giao theo `TEAM.md`; tài liệu C và kết quả grade đã được nhóm lưu ở `submission/docs/form-c-incident.md`, `submission/REPORT.md` và `docs/s5-fix-report.md`. Báo cáo TV2 này là phần giải thích Guard, không thay thế các mục incident-specific trong hồ sơ đó. Không suy đoán nội dung S1–S4 hoặc S6–S8. Lượt tích hợp này không chạy lại incident grade.
 - `_as_of_date` gọi `H.d` → `date.fromisoformat`. Regression hiện chứng minh ngày lịch không tồn tại `2026-02-30` không được dùng và dẫn tới fallback hợp lệ hoặc fail closed. Python cũng chấp nhận ISO basic/week-date forms như `20260228` và `2026-W09-6`; nếu hợp đồng yêu cầu đúng cú pháp `YYYY-MM-DD`, cần thêm kiểm tra định dạng regex.
 - Reply PII filter là regex + danh sách giá trị đã biết, có thể bỏ lọt biến thể/PII chưa có trong DB.
 - Approval hợp lệ không vô hiệu hóa cap order, nhưng có thể thay đổi áp dụng auto customer/day limit theo thiết kế hiện tại; business owner cần xác nhận các policy/limit đó.
@@ -119,10 +119,10 @@ Khuyến nghị cho owner Agent (TV2 không sửa workflow ngoài phạm vi): ch
 | Đầu việc | Trạng thái | Lý do |
 |---|---|---|
 | B7.1–B7.2 | DONE (code/test); PARTIAL (phiếu nhóm) | Guard và regression evidence có; form nhóm/config/runbook của owner khác không được thay thế. |
-| C5 | PARTIAL | Hoàn thành specification kỹ thuật từ code; chưa thể gắn với incident card chưa được xác định. |
-| C6 | PARTIAL | RCA trước sửa có căn cứ từ Git history; không phải RCA của một S1–S8 cụ thể. |
-| C7 | PARTIAL | Đối chiếu remediation/test code đã triển khai; incident grading chưa chạy. |
-| C9 | PARTIAL | Phân loại sau sửa và Agent–Guard mismatch đã ghi; chưa có evidence incident-specific. |
+| C5 | PARTIAL | Specification Guard ở đây; phần specification S5 chính thức nằm trong Phiếu C ở `submission/docs/form-c-incident.md`. |
+| C6 | PARTIAL | RCA code-level có bằng chứng Git; RCA theo thẻ S5 nằm trong Phiếu C, không lặp lại ở đây. |
+| C7 | PARTIAL | Remediation Guard và kiểm thử được liên kết; kết quả incident S5 ở hồ sơ nhóm. |
+| C9 | PARTIAL | Phân loại kỹ thuật sau sửa và lỗi Agent–Guard còn tồn tại; tham chiếu Phiếu C S5 cho hồ sơ chính thức. |
 | Demo | DONE | Kịch bản 2–3 phút gắn tới test names thật, unit-level only. |
 | TEAM.md | DONE (mục TV2) | Danh tính TV2 đã được người dùng xác nhận và mục cá nhân đã cập nhật; các thành viên khác chưa khai báo. |
 
@@ -130,11 +130,11 @@ Khuyến nghị cho owner Agent (TV2 không sửa workflow ngoài phạm vi): ch
 
 | Kiểm tra | Kết quả |
 |---|---|
-| `python3 -m unittest discover -s tests -v` | PASS (2026-11-18): 39 tests, 0 failures (`Ran 39 tests`; 26 guard, 13 public). |
+| `python3 -m unittest discover -s tests -v` | PASS (2026-11-18): 44 tests, 0 failures (26 `test_guards`, 5 reconciliation, 13 public). |
 | `python3 -m lab10.criteria verify` | PASS (2026-11-18): `ok: true`; hash và signed_hash đều `ce7ab3b63b40620ff1556a26080e0d0f24712e4ce6d467cea37e02ec71f44c05`. |
 | `git diff --check` | PASS (2026-11-18): không có whitespace error. |
-| Official evaluation / incident grade | Không chạy; chưa có thẻ sự cố và không thuộc xác minh được yêu cầu. |
+| Official evaluation / incident grade | Không chạy lại trong lượt tích hợp; kết quả S5 đã có trong hồ sơ `origin/main` tại thời điểm tích hợp. |
 
 ## Nguồn đọc chính
 
-`README.md`, `problem-set.md`, `templates/form-c-incident.md`, `incidents/README.md`, `TEAM.md`, `docs/guide.md`, `lab10/agent.py`, `lab10/guards.py`, `lab10/helpers.py`, `lab10/tools.py`, `lab10/ops.py`, `tests/test_guards.py`, `tests/test_public.py`, `config/acceptance_criteria.json`, `config/acceptance_criteria.lock`, các commit TV2 từ `937e234` đến `58e9fa2`.
+`README.md`, `problem-set.md`, `templates/form-c-incident.md`, `incidents/S5/card.md`, `TEAM.md`, `docs/guide.md`, `docs/s5-fix-report.md`, `submission/REPORT.md`, `submission/docs/form-c-incident.md`, `lab10/agent.py`, `lab10/guards.py`, `lab10/helpers.py`, `lab10/tools.py`, `lab10/ops.py`, `tests/test_guards.py`, `tests/test_refund_reconciliation.py`, `tests/test_public.py`, `config/acceptance_criteria.json`, `config/acceptance_criteria.lock`, các commit TV2 và tích hợp tới `d38ceff`.
