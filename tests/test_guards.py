@@ -3,6 +3,7 @@ import unittest
 from copy import deepcopy
 from pathlib import Path
 import sys
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -57,6 +58,13 @@ class GuardChecks(unittest.TestCase):
         ctx = self.context("T-001")
         self.assertEqual(guards.write_gate(ctx, self.refund_action(ctx, 25000, payer="MERCHANT")).action,
                          "deny")
+
+    def test_refund_rejects_mismatched_ticket_id(self):
+        ctx = self.context("T-001")
+        action = self.refund_action(ctx, 25000, ticket_id="T-OTHER")
+        v = guards.write_gate(ctx, action)
+        self.assertEqual(v.action, "escalate")
+        self.assertTrue(any(e.get("kind") == "refund_context_mismatch" for e in ctx.events))
 
     def test_unverified_approval_cannot_bypass_auto_limits(self):
         ctx = self.context("T-001")
@@ -196,11 +204,19 @@ class GuardChecks(unittest.TestCase):
                 self.assertTrue(any(e.get("kind") == "refund_approval_invalid" for e in ctx.events))
 
     def test_missing_or_invalid_context_and_tools_dates_never_allow_refund(self):
-        for context_date, tools_date in (("", ""), ("not-a-date", "also-not-a-date")):
+        for context_date, tools_date in (("", ""), ("not-a-date", "also-not-a-date"),
+                                         ("2026-02-30", "2026-02-30")):
             with self.subTest(context_date=context_date, tools_date=tools_date):
                 ctx = self._approval_context(as_of=context_date, tools_as_of=tools_date)
                 self.assertNotEqual(guards.write_gate(ctx, self._approved_refund(ctx)).action, "allow")
                 self.assertEqual(guards.pre_guard(ctx).action, "escalate")
+
+    def test_impossible_context_calendar_date_falls_back_to_valid_tools_date(self):
+        ctx = self._approval_context(as_of="2026-02-30", tools_as_of="2026-11-16",
+                                     expires_at="2026-11-01")
+        v = guards.write_gate(ctx, self._approved_refund(ctx))
+        self.assertIn(v.action, ("deny", "escalate"))
+        self.assertTrue(any(e.get("kind") == "refund_approval_invalid" for e in ctx.events))
 
     def test_unexpired_approval_uses_tools_date_fallback(self):
         ctx = self._approval_context(as_of="", tools_as_of="2026-11-16", expires_at="2026-11-20")
@@ -250,6 +266,20 @@ class GuardChecks(unittest.TestCase):
         ctx = self.context("T-001")
         self.assertEqual(guards.write_gate(ctx, {"tool": "send_reply", "ticket_id": "T-001", "customer_id": "C-02",
                                                   "text": "Xin chào"}).action, "deny")
+
+    def test_write_gate_denies_unknown_tool(self):
+        ctx = self.context("T-001")
+        v = guards.write_gate(ctx, {"tool": "unknown_write"})
+        self.assertEqual(v.action, "deny")
+        self.assertTrue(any(e.get("kind") == "unknown_write_tool" for e in ctx.events))
+
+    def test_write_gate_escalates_guard_exception(self):
+        ctx = self.context("T-001")
+        with patch("lab10.guards._refund_gate", side_effect=RuntimeError("synthetic guard failure")):
+            v = guards.write_gate(ctx, self.refund_action(ctx))
+        self.assertEqual(v.action, "escalate")
+        self.assertTrue(any(e.get("kind") == "guard_check_failed" and
+                            e.get("error_type") == "RuntimeError" for e in ctx.events))
 
 
 if __name__ == "__main__":
