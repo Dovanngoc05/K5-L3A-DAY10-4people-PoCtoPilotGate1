@@ -7,18 +7,24 @@
     "roi_min": 0
   },
   "operations": {
-    "pic": "",
-    "approver_id": "",
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
     "reviewers_on_shift": 1,
-    "review_capacity_per_hour": null,
-    "max_queue_wait_minutes": null,
-    "stop_conditions": [],
-    "alert_channel": "",
-    "decision_note": false,
-    "review_sampling_pct": 0
+    "review_capacity_per_hour": 6,
+    "max_queue_wait_minutes": 60,
+    "stop_conditions": [
+      "Khi phát hiện bất kỳ hoàn sai, lỗi hãng oan hoặc lộ PII: tạm dừng pilot, tắt ngay hành động ghi/gửi liên quan và chuyển người xử lý; hoàn tất thao tác dừng trong tối đa 5 phút từ cảnh báo đỏ.",
+      "Khi có từ 1 ca bị ùn, chờ quá 60 phút hoặc hết ca chưa tới lượt: dừng nhận ticket mới vào luồng tự động và chuyển hàng chờ cho NV-HANH điều phối; không tự tăng số người khi chưa bố trí được người thật.",
+      "Khi chi phí mỗi ticket vượt 10000đ, ROI âm, tiền LLM một ticket vượt 1500đ hoặc hoàn tự động/ngày vượt 2000000đ: chưa mở hoặc tạm dừng pilot, NV-TUNG phối hợp sản phẩm/Finance đánh giá lại.",
+      "Dừng pilot và đánh giá lại Gate 1 khi vi phạm an toàn tái diễn sau một vòng sửa hoặc từ hai ngưỡng an toàn trở lên không đạt, theo decision_rule đã ký.",
+      "Chỉ khôi phục sau khi sửa, chạy lại bộ base và gói sự cố đã nhận không tái diễn, mọi ngưỡng bắt buộc và business_ops đạt, không regression; NV-TUNG cùng NV-HANH và đại diện sản phẩm xác nhận."
+    ],
+    "alert_channel": "lab10-ops-alerts (kênh mô phỏng, cần tạo và diễn tập trước pilot thật)",
+    "decision_note": true,
+    "review_sampling_pct": 10
   },
   "legal": {
-    "pii_fields_blocked_to_third_party": [],
-    "carrier_fault_requires_recorded_cause": false
+    "pii_fields_blocked_to_third_party": ["customer_note", "recipient_contact", "name", "phone", "street", "recipient_name", "recipient_phone", "recipient_street"],
+    "carrier_fault_requires_recorded_cause": true
   }
 }
